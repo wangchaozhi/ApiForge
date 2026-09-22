@@ -2,6 +2,7 @@ import { translate as t, useLocale, useLanguageStore } from './i18n';
 import { useEffect } from 'react';
 import { CookieManagerPanel } from './components/CookieManagerPanel';
 import { EnvironmentPanel } from './components/EnvironmentPanel';
+import { GraphqlPanel } from './components/GraphqlPanel';
 import { HistoryPanel } from './components/HistoryPanel';
 import { RequestPanel } from './components/RequestPanel';
 import { RequestTabs } from './components/RequestTabs';
@@ -61,6 +62,7 @@ export default function App() {
           </div>
         )}
         {activeView === 'runner' && <RunnerPanel />}
+        {activeView === 'graphql' && <GraphqlPanel />}
         {activeView === 'history' && <HistoryPanel />}
         {activeView === 'environments' && <EnvironmentPanel />}
         {activeView === 'cookies' && <CookieManagerPanel />}
