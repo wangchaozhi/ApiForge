@@ -179,6 +179,13 @@ function postmanBody(body: JsonRecord | undefined): Pick<ApiRequest, 'bodyType' 
   return base;
 }
 
+function postmanEventScript(item: JsonRecord, listen: 'prerequest' | 'test') {
+  const event = Array.isArray(item.event) ? item.event.find((candidate: JsonRecord) => candidate?.listen === listen) : undefined;
+  const exec = event?.script?.exec;
+  if (Array.isArray(exec)) return exec.join('\n');
+  return typeof exec === 'string' ? exec : '';
+}
+
 function importPostmanRequest(item: JsonRecord) {
   const source = item.request ?? {};
   const request = emptyRequest(String(item.name ?? 'Imported request'));
@@ -190,6 +197,8 @@ function importPostmanRequest(item: JsonRecord) {
     params: postmanQuery(source),
     headers: postmanHeaders(source),
     auth: postmanAuth(source.auth),
+    preRequestScript: postmanEventScript(item, 'prerequest'),
+    testScript: postmanEventScript(item, 'test'),
     ...body,
   };
 }
@@ -307,8 +316,18 @@ function bodyToPostman(request: ApiRequest) {
 }
 
 function requestToPostman(request: ApiRequest) {
+  const event = [
+    request.preRequestScript
+      ? { listen: 'prerequest', script: { type: 'text/javascript', exec: request.preRequestScript.split('\n') } }
+      : null,
+    request.testScript
+      ? { listen: 'test', script: { type: 'text/javascript', exec: request.testScript.split('\n') } }
+      : null,
+  ].filter(Boolean);
+
   return {
     name: request.name,
+    ...(event.length ? { event } : {}),
     request: {
       method: request.method,
       header: request.headers.filter((item) => item.key).map((item) => ({
