@@ -539,3 +539,39 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running ApiForge");
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::is_textual_content_type;
+
+    #[test]
+    fn classifies_textual_response_types() {
+        for content_type in [
+            "",
+            "text/plain; charset=utf-8",
+            "application/json",
+            "application/problem+json",
+            "application/xml",
+            "application/javascript",
+            "application/x-www-form-urlencoded",
+            "image/svg+xml",
+        ] {
+            assert!(is_textual_content_type(content_type), "expected textual: {content_type}");
+        }
+    }
+
+    #[test]
+    fn classifies_binary_response_types() {
+        for content_type in [
+            "application/pdf",
+            "application/octet-stream",
+            "image/png",
+            "image/jpeg",
+            "audio/mpeg",
+            "video/mp4",
+        ] {
+            assert!(!is_textual_content_type(content_type), "expected binary: {content_type}");
+        }
+    }
+}
