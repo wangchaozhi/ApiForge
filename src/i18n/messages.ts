@@ -186,6 +186,7 @@ export const zhCN = {
   "Pre-request Script": "请求前脚本",
   "Tests": "测试脚本",
   "Script execution will be enabled by Collection Runner.": "脚本执行将在集合运行器中启用。",
+  "Scripts execute when this request runs in Collection Runner.": "此请求在集合运行器中执行时会运行这些脚本。",
   "OAuth 2.0": "OAuth 2.0",
   "Authorization Code": "授权码",
   "Client Credentials": "客户端凭据",
