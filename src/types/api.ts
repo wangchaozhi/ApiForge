@@ -29,6 +29,17 @@ export type NetworkSettings = {
   proxyUrl: string;
 };
 
+export type EnvironmentVariable = {
+  value: string;
+  secret: boolean;
+};
+
+export type EnvironmentProfile = {
+  id: string;
+  name: string;
+  variables: Record<string, EnvironmentVariable>;
+};
+
 export type ApiRequest = {
   id: string;
   name: string;
