@@ -8,7 +8,7 @@ use super::AppError;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-struct HistoryEntry {
+pub(crate) struct HistoryEntry {
     id: String,
     request_id: String,
     request_name: String,
