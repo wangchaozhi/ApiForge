@@ -71,6 +71,7 @@ Key frontend versions in v0.5.0:
 Key Rust versions:
 
 - Tauri 2.11.6
+- base64 0.23.1
 - reqwest 0.13.5
 - reqwest_cookie_store 0.10.0
 - cookie_store 0.22.1
