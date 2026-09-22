@@ -35,3 +35,5 @@ jobs:
           git add -A
           git commit -m "feat: ApiForge v0.5.0"
           git push origin HEAD:main
+
+# Triggered after all archive parts are present.
