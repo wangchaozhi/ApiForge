@@ -1,9 +1,34 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
-use boa_engine::{Context, Source};
+use boa_engine::{
+    Context, JsNativeError, JsResult, JsString, Source,
+    context::{ContextBuilder, HostHooks},
+    realm::Realm,
+};
 use serde::{Deserialize, Serialize};
 
 const MAX_SCRIPT_BYTES: usize = 256 * 1024;
+
+struct SandboxHooks;
+
+impl HostHooks for SandboxHooks {
+    fn ensure_can_compile_strings(
+        &self,
+        _realm: Realm,
+        _parameters: &[JsString],
+        _body: &JsString,
+        _direct: bool,
+        _context: &mut Context,
+    ) -> JsResult<()> {
+        Err(JsNativeError::typ()
+            .with_message("Dynamic code compilation is disabled in ApiForge scripts.")
+            .into())
+    }
+
+    fn max_buffer_size(&self, _context: &mut Context) -> u64 {
+        8 * 1024 * 1024 * 8
+    }
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -204,7 +229,10 @@ fn execute_script(input: ScriptExecution) -> Result<ScriptResult, String> {
     }
 
     let source = script_prelude(&input)?;
-    let mut context = Context::default();
+    let mut context = ContextBuilder::new()
+        .host_hooks(Rc::new(SandboxHooks))
+        .build()
+        .map_err(|error| format!("Script sandbox initialization failed: {error}"))?;
     let mut limits = context.runtime_limits();
     limits.set_loop_iteration_limit(100_000);
     limits.set_recursion_limit(128);
@@ -289,6 +317,12 @@ af.test("failure is captured", () => af.expect(1).toBe(2));
         assert!(result.tests[0].passed);
         assert!(result.tests[1].passed);
         assert!(!result.tests[2].passed);
+    }
+
+    #[test]
+    fn dynamic_code_compilation_is_disabled() {
+        let error = execute_script(execution(r#"eval("1 + 1")"#, false)).expect_err("eval must fail");
+        assert!(error.contains("Dynamic code compilation is disabled"));
     }
 
     #[test]
