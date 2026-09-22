@@ -89,6 +89,7 @@ export function EnvironmentPanel() {
 
   const deleteEnvironment = () => {
     if (!activeProfile || profiles.length <= 1) return;
+    if (!window.confirm(`${t('Delete environment')} “${activeProfile.name}”?`)) return;
     void runVaultAction(async () => {
       if (activeHasSecrets) {
         if (!vaultUnlocked) throw new Error(t('Unlock the secret vault before deleting this environment.'));
@@ -96,9 +97,7 @@ export function EnvironmentPanel() {
           if (variable.secret) await deleteSecret(environmentSecretKey(activeProfile.id, key));
         }
       }
-      if (window.confirm(`${t('Delete environment')} “${activeProfile.name}”?`)) {
-        deleteEnvironmentProfile(activeProfile.id);
-      }
+      deleteEnvironmentProfile(activeProfile.id);
     });
   };
 
