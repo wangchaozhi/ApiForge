@@ -1,4 +1,4 @@
-import { appDataDir, join } from '@tauri-apps/api/path';
+import { appLocalDataDir, join } from '@tauri-apps/api/path';
 import { Stronghold, type Store } from '@tauri-apps/plugin-stronghold';
 import type { EnvironmentProfile } from '../types/api';
 
@@ -37,7 +37,7 @@ export async function unlockSecretVault(password: string) {
     activeStore = null;
   }
 
-  const snapshotPath = await join(await appDataDir(), SNAPSHOT_NAME);
+  const snapshotPath = await join(await appLocalDataDir(), SNAPSHOT_NAME);
   const stronghold = await Stronghold.load(snapshotPath, password);
 
   let client;
