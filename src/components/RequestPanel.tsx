@@ -10,7 +10,7 @@ import { curlToRequest, requestToCurl } from '../lib/curl';
 import { makeHistoryEntry, saveHistory } from '../lib/history';
 import { cancelApiRequest, sendApiRequest, toEngineRequest } from '../lib/request';
 import { createId } from '../lib/id';
-import { useAppStore } from '../store/appStore';
+import { getActiveEnvironmentValues, useAppStore } from '../store/appStore';
 import type { BodyType, HttpMethod } from '../types/api';
 
 const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
@@ -32,7 +32,7 @@ export function RequestPanel() {
   const [importError, setImportError] = useState<string | null>(null);
   const activeRequestId = useAppStore((state) => state.activeRequestId);
   const request = useAppStore((state) => state.requests.find((item) => item.id === activeRequestId));
-  const variables = useAppStore((state) => state.environments);
+  const variables = useAppStore(getActiveEnvironmentValues);
   const networkSettings = useAppStore((state) => state.networkSettings);
   const update = useAppStore((state) => state.updateActiveRequest);
   const importRequest = useAppStore((state) => state.importRequest);
