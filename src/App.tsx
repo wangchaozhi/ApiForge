@@ -25,6 +25,8 @@ export default function App() {
   }, []);
   const activeView = useAppStore((state) => state.activeView);
   const activeRequestId = useAppStore((state) => state.activeRequestId);
+  const activeEnvironmentId = useAppStore((state) => state.activeEnvironmentId);
+  const activeEnvironmentName = useAppStore((state) => state.environmentProfiles.find((profile) => profile.id === activeEnvironmentId)?.name ?? 'Default');
   const history = useAppStore((state) => state.history);
   const setHistory = useAppStore((state) => state.setHistory);
 
@@ -40,7 +42,7 @@ export default function App() {
         <header className="topbar">
           <div className="environment-chip">
             <span className="environment-dot" />
-            {t("ApiForge Desktop")}
+            {activeEnvironmentName}
           </div>
           <div className="topbar-hint">{t('Variables support {syntax} syntax', { syntax: '{{name}}' })}</div>
         </header>
