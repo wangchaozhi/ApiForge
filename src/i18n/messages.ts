@@ -181,7 +181,11 @@ export const zhCN = {
   "Secrets are excluded from exports by default.": "默认导出时不会包含敏感值。",
   "Import complete.": "导入完成。",
   "Unsupported JSON file.": "不支持的 JSON 文件。",
-  "Import failed: {message}": "导入失败：{message}"
+  "Import failed: {message}": "导入失败：{message}",
+  "Scripts": "脚本",
+  "Pre-request Script": "请求前脚本",
+  "Tests": "测试脚本",
+  "Script execution will be enabled by Collection Runner.": "脚本执行将在集合运行器中启用。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
