@@ -213,7 +213,12 @@ export const zhCN = {
   "No runner results yet": "暂无运行结果",
   "Choose a collection and start a run.": "选择一个集合并开始运行。",
   "Method": "方法",
-  "Status": "状态"
+  "Status": "状态",
+  "Stop on request or test failure": "请求或测试失败时停止",
+  "Scripts run in an isolated Rust JavaScript sandbox; environment changes are scoped to this run.": "脚本在隔离的 Rust JavaScript 沙箱中运行；环境变量修改仅在本次运行中生效。",
+  "Failed": "失败",
+  "{passed}/{total} tests passed": "{passed}/{total} 个测试通过",
+  "{count} script logs": "{count} 条脚本日志"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
