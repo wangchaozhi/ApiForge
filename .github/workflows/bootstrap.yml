@@ -22,9 +22,9 @@ jobs:
           cat .bootstrap/part-* | base64 -d > /tmp/apiforge-src.tar.gz
           mkdir -p /tmp/apiforge-src
           tar -xzf /tmp/apiforge-src.tar.gz -C /tmp/apiforge-src
+          rm -rf /tmp/apiforge-src/.github
           rm -rf .bootstrap
           cp -a /tmp/apiforge-src/. .
-          rm -f .github/workflows/bootstrap.yml
 
       - name: Commit source
         shell: bash
@@ -35,5 +35,3 @@ jobs:
           git add -A
           git commit -m "feat: ApiForge v0.5.0"
           git push origin HEAD:main
-
-# Triggered after all archive parts are present.
