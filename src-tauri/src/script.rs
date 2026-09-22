@@ -56,143 +56,143 @@ fn script_prelude(input: &ScriptExecution) -> Result<String, String> {
     let response = serde_json::to_string(&input.response).map_err(|error| error.to_string())?;
     let phase = serde_json::to_string(&input.phase).map_err(|error| error.to_string())?;
 
-    Ok(format!(
-        r#"
-(() => {{
+    let template = r#"
+(() => {
   "use strict";
-  const __environment = {environment};
-  const __request = {request};
-  const __response = {response};
-  const __phase = {phase};
-  const __result = {{
-    environment: {{}},
-    headers: {{}},
+  const __environment = __AF_ENVIRONMENT__;
+  const __request = __AF_REQUEST__;
+  const __response = __AF_RESPONSE__;
+  const __phase = __AF_PHASE__;
+  const __result = {
+    environment: {},
+    headers: {},
     tests: [],
     logs: []
-  }};
+  };
 
   const __text = (value) => value == null ? "" : String(value);
-  const __headerKey = (name) => {{
+  const __headerKey = (name) => {
     const wanted = __text(name).toLowerCase();
-    return Object.keys(__request.headers || {{}}).find((key) => key.toLowerCase() === wanted);
-  }};
-  const __getHeader = (name) => {{
+    return Object.keys(__request.headers || {}).find((key) => key.toLowerCase() === wanted);
+  };
+  const __getHeader = (name) => {
     const key = __headerKey(name);
     return key ? __request.headers[key] : undefined;
-  }};
-  const __setHeader = (name, value) => {{
+  };
+  const __setHeader = (name, value) => {
     const key = __headerKey(name) || __text(name);
     __request.headers[key] = __text(value);
     __result.headers[key] = __text(value);
-  }};
-  const __removeHeader = (name) => {{
+  };
+  const __removeHeader = (name) => {
     const key = __headerKey(name) || __text(name);
     delete __request.headers[key];
     __result.headers[key] = null;
-  }};
+  };
 
-  const __expect = (actual) => Object.freeze({{
-    toBe(expected) {{
+  const __expect = (actual) => Object.freeze({
+    toBe(expected) {
       if (!Object.is(actual, expected)) throw new Error(`Expected ${JSON.stringify(actual)} to be ${JSON.stringify(expected)}`);
       return true;
-    }},
-    toEqual(expected) {{
+    },
+    toEqual(expected) {
       if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`Expected ${JSON.stringify(actual)} to equal ${JSON.stringify(expected)}`);
       return true;
-    }},
-    toContain(expected) {{
+    },
+    toContain(expected) {
       if (actual == null || typeof actual.includes !== "function" || !actual.includes(expected)) {
         throw new Error(`Expected ${JSON.stringify(actual)} to contain ${JSON.stringify(expected)}`);
-      }}
+      }
       return true;
-    }},
-    toBeTruthy() {{
+    },
+    toBeTruthy() {
       if (!actual) throw new Error(`Expected ${JSON.stringify(actual)} to be truthy`);
       return true;
-    }}
-  }});
+    }
+  });
 
-  const af = Object.freeze({{
+  const af = Object.freeze({
     phase: __phase,
-    environment: Object.freeze({{
-      get(key) {{
+    environment: Object.freeze({
+      get(key) {
         const name = __text(key);
         if (Object.prototype.hasOwnProperty.call(__result.environment, name)) {
           return __result.environment[name] ?? undefined;
-        }}
+        }
         return __environment[name];
-      }},
-      set(key, value) {{
+      },
+      set(key, value) {
         const name = __text(key);
         const text = __text(value);
         __environment[name] = text;
         __result.environment[name] = text;
-      }},
-      unset(key) {{
+      },
+      unset(key) {
         const name = __text(key);
         delete __environment[name];
         __result.environment[name] = null;
-      }}
-    }}),
-    request: Object.freeze({{
-      get method() {{ return __request.method; }},
-      get url() {{ return __request.url; }},
-      get body() {{ return __request.body; }},
-      headers: Object.freeze({{
+      }
+    }),
+    request: Object.freeze({
+      get method() { return __request.method; },
+      get url() { return __request.url; },
+      get body() { return __request.body; },
+      headers: Object.freeze({
         get: __getHeader,
         set: __setHeader,
         remove: __removeHeader
-      }})
-    }}),
-    response: __response ? Object.freeze({{
+      })
+    }),
+    response: __response ? Object.freeze({
       status: __response.status,
       statusText: __response.statusText,
       body: __response.body,
-      headers: Object.freeze({{ ...__response.headers }}),
-      json() {{ return JSON.parse(__response.body); }}
-    }}) : null,
-    test(name, check) {{
+      headers: Object.freeze({ ...__response.headers }),
+      json() { return JSON.parse(__response.body); }
+    }) : null,
+    test(name, check) {
       const testName = __text(name) || "Unnamed test";
-      try {{
+      try {
         const value = typeof check === "function" ? check() : check;
         if (value === false) throw new Error("Test returned false");
-        __result.tests.push({{ name: testName, passed: true, message: "" }});
+        __result.tests.push({ name: testName, passed: true, message: "" });
         return true;
-      }} catch (error) {{
-        __result.tests.push({{
+      } catch (error) {
+        __result.tests.push({
           name: testName,
           passed: false,
           message: error instanceof Error ? error.message : __text(error)
-        }});
+        });
         return false;
-      }}
-    }},
+      }
+    },
     expect: __expect
-  }});
+  });
 
-  const console = Object.freeze({{
-    log(...values) {{
+  const console = Object.freeze({
+    log(...values) {
       __result.logs.push(values.map((value) => typeof value === "string" ? value : JSON.stringify(value)).join(" "));
-    }},
-    warn(...values) {{
+    },
+    warn(...values) {
       __result.logs.push("[warn] " + values.map((value) => typeof value === "string" ? value : JSON.stringify(value)).join(" "));
-    }},
-    error(...values) {{
+    },
+    error(...values) {
       __result.logs.push("[error] " + values.map((value) => typeof value === "string" ? value : JSON.stringify(value)).join(" "));
-    }}
-  }});
+    }
+  });
 
-  {script}
+  __AF_SCRIPT__
 
   return JSON.stringify(__result);
-}})()
-"#,
-        environment = environment,
-        request = request,
-        response = response,
-        phase = phase,
-        script = input.script,
-    ))
+})()
+"#;
+
+    Ok(template
+        .replace("__AF_ENVIRONMENT__", &environment)
+        .replace("__AF_REQUEST__", &request)
+        .replace("__AF_RESPONSE__", &response)
+        .replace("__AF_PHASE__", &phase)
+        .replace("__AF_SCRIPT__", &input.script))
 }
 
 fn execute_script(input: ScriptExecution) -> Result<ScriptResult, String> {
