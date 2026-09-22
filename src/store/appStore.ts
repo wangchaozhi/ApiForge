@@ -6,6 +6,7 @@ import type {
   ApiCollection,
   ApiRequest,
   ApiResponse,
+  EnvironmentProfile,
   HistoryEntry,
   KeyValue,
   MultipartField,
@@ -57,6 +58,21 @@ const starterCollection: ApiCollection = {
 };
 
 const emptyRuntime = (): RequestRuntime => ({ response: null, error: null, sending: false, operationId: null });
+
+const starterEnvironment: EnvironmentProfile = {
+  id: createId('env'),
+  name: 'Default',
+  variables: { name: { value: 'ApiForge', secret: false } },
+};
+
+export function getActiveEnvironmentProfile(state: { environmentProfiles: EnvironmentProfile[]; activeEnvironmentId: string }) {
+  return state.environmentProfiles.find((profile) => profile.id === state.activeEnvironmentId) ?? state.environmentProfiles[0];
+}
+
+export function getActiveEnvironmentValues(state: { environmentProfiles: EnvironmentProfile[]; activeEnvironmentId: string }) {
+  const profile = getActiveEnvironmentProfile(state);
+  return Object.fromEntries(Object.entries(profile?.variables ?? {}).map(([key, variable]) => [key, variable.value]));
+}
 
 function newRequest(name = t("Untitled Request")): ApiRequest {
   return {
@@ -147,7 +163,8 @@ type AppState = {
   openRequestIds: string[];
   activeRequestId: string;
   activeView: WorkspaceView;
-  environments: Record<string, string>;
+  environmentProfiles: EnvironmentProfile[];
+  activeEnvironmentId: string;
   networkSettings: NetworkSettings;
   history: HistoryEntry[];
   runtimeByRequest: Record<string, RequestRuntime>;
@@ -167,7 +184,12 @@ type AppState = {
   createFolder: (collectionId: string, name?: string) => string;
   renameFolder: (collectionId: string, folderId: string, name: string) => void;
   deleteFolder: (collectionId: string, folderId: string) => void;
+  createEnvironmentProfile: (name?: string) => string;
+  renameEnvironmentProfile: (id: string, name: string) => void;
+  deleteEnvironmentProfile: (id: string) => void;
+  setActiveEnvironmentProfile: (id: string) => void;
   setEnvironment: (key: string, value: string) => void;
+  setEnvironmentSecret: (key: string, secret: boolean) => void;
   removeEnvironment: (key: string) => void;
   replaceEnvironmentKey: (oldKey: string, newKey: string) => void;
   updateNetworkSettings: (settings: Partial<NetworkSettings>) => void;
@@ -188,7 +210,8 @@ export const useAppStore = create<AppState>()(
       openRequestIds: [starterRequest.id],
       activeRequestId: starterRequest.id,
       activeView: 'collections',
-      environments: { name: 'ApiForge' },
+      environmentProfiles: [starterEnvironment],
+      activeEnvironmentId: starterEnvironment.id,
       networkSettings: defaultNetworkSettings,
       history: [],
       runtimeByRequest: { [starterRequest.id]: emptyRuntime() },
@@ -341,20 +364,75 @@ export const useAppStore = create<AppState>()(
           };
         }),
       })),
-      setEnvironment: (key, value) => set((state) => ({ environments: { ...state.environments, [key]: value } })),
-      removeEnvironment: (key) => set((state) => {
-        const environments = { ...state.environments };
-        delete environments[key];
-        return { environments };
+      createEnvironmentProfile: (name = 'New Environment') => {
+        const id = createId('env');
+        set((state) => ({
+          environmentProfiles: [...state.environmentProfiles, { id, name: name.trim() || 'New Environment', variables: {} }],
+          activeEnvironmentId: id,
+        }));
+        return id;
+      },
+      renameEnvironmentProfile: (id, name) => set((state) => ({
+        environmentProfiles: state.environmentProfiles.map((profile) =>
+          profile.id === id ? { ...profile, name: name.trim() || profile.name } : profile,
+        ),
+      })),
+      deleteEnvironmentProfile: (id) => set((state) => {
+        if (state.environmentProfiles.length <= 1) return state;
+        const environmentProfiles = state.environmentProfiles.filter((profile) => profile.id !== id);
+        return {
+          environmentProfiles,
+          activeEnvironmentId: state.activeEnvironmentId === id
+            ? (environmentProfiles[0]?.id ?? '')
+            : state.activeEnvironmentId,
+        };
       }),
+      setActiveEnvironmentProfile: (id) => set((state) => ({
+        activeEnvironmentId: state.environmentProfiles.some((profile) => profile.id === id) ? id : state.activeEnvironmentId,
+      })),
+      setEnvironment: (key, value) => set((state) => ({
+        environmentProfiles: state.environmentProfiles.map((profile) => profile.id === state.activeEnvironmentId
+          ? {
+              ...profile,
+              variables: {
+                ...profile.variables,
+                [key]: { value, secret: profile.variables[key]?.secret ?? false },
+              },
+            }
+          : profile),
+      })),
+      setEnvironmentSecret: (key, secret) => set((state) => ({
+        environmentProfiles: state.environmentProfiles.map((profile) => profile.id === state.activeEnvironmentId
+          ? {
+              ...profile,
+              variables: {
+                ...profile.variables,
+                [key]: { value: profile.variables[key]?.value ?? '', secret },
+              },
+            }
+          : profile),
+      })),
+      removeEnvironment: (key) => set((state) => ({
+        environmentProfiles: state.environmentProfiles.map((profile) => {
+          if (profile.id !== state.activeEnvironmentId) return profile;
+          const variables = { ...profile.variables };
+          delete variables[key];
+          return { ...profile, variables };
+        }),
+      })),
       replaceEnvironmentKey: (oldKey, newKey) => set((state) => {
         const trimmed = newKey.trim();
         if (!trimmed || trimmed === oldKey) return state;
-        const environments = { ...state.environments };
-        const value = environments[oldKey] ?? '';
-        delete environments[oldKey];
-        environments[trimmed] = value;
-        return { environments };
+        return {
+          environmentProfiles: state.environmentProfiles.map((profile) => {
+            if (profile.id !== state.activeEnvironmentId) return profile;
+            const variables = { ...profile.variables };
+            const variable = variables[oldKey] ?? { value: '', secret: false };
+            delete variables[oldKey];
+            variables[trimmed] = variable;
+            return { ...profile, variables };
+          }),
+        };
       }),
       updateNetworkSettings: (settings) => set((state) => ({ networkSettings: { ...state.networkSettings, ...settings } })),
       resetNetworkSettings: () => set({ networkSettings: defaultNetworkSettings }),
@@ -421,11 +499,19 @@ export const useAppStore = create<AppState>()(
         collections: state.collections,
         openRequestIds: state.openRequestIds,
         activeRequestId: state.activeRequestId,
-        environments: state.environments,
+        environmentProfiles: state.environmentProfiles.map((profile) => ({
+          ...profile,
+          variables: Object.fromEntries(Object.entries(profile.variables).map(([key, variable]) => [
+            key,
+            variable.secret ? { ...variable, value: '' } : variable,
+          ])),
+        })),
+        activeEnvironmentId: state.activeEnvironmentId,
         networkSettings: state.networkSettings,
       }),
       merge: (persisted, current) => {
         const saved = persisted as Partial<AppState>;
+        const legacyEnvironments = (persisted as Partial<AppState> & { environments?: Record<string, string> }).environments;
         const requests = saved.requests?.length ? saved.requests.map(normalizeRequest) : current.requests;
         const collections = normalizeCollections(saved.collections, requests);
         const valid = new Set(requests.map((item) => item.id));
@@ -433,6 +519,19 @@ export const useAppStore = create<AppState>()(
         const preferredActive = saved.activeRequestId && valid.has(saved.activeRequestId) ? saved.activeRequestId : '';
         const activeRequestId = preferredActive || openRequestIds[0] || requests[0]?.id || '';
         const finalOpenIds = activeRequestId && !openRequestIds.includes(activeRequestId) ? [...openRequestIds, activeRequestId] : openRequestIds;
+        const migratedLegacyProfile = legacyEnvironments
+          ? [{
+              id: createId('env'),
+              name: 'Default',
+              variables: Object.fromEntries(Object.entries(legacyEnvironments).map(([key, value]) => [key, { value, secret: false }])),
+            }]
+          : [];
+        const environmentProfiles = saved.environmentProfiles?.length
+          ? saved.environmentProfiles
+          : (migratedLegacyProfile.length ? migratedLegacyProfile : current.environmentProfiles);
+        const activeEnvironmentId = saved.activeEnvironmentId && environmentProfiles.some((profile) => profile.id === saved.activeEnvironmentId)
+          ? saved.activeEnvironmentId
+          : (environmentProfiles[0]?.id ?? '');
         return {
           ...current,
           ...saved,
@@ -440,6 +539,8 @@ export const useAppStore = create<AppState>()(
           collections,
           openRequestIds: finalOpenIds,
           activeRequestId,
+          environmentProfiles,
+          activeEnvironmentId,
           networkSettings: { ...defaultNetworkSettings, ...(saved.networkSettings ?? {}) },
           activeView: 'collections',
           history: [],
