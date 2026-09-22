@@ -2,6 +2,7 @@ import { translate as t } from '../i18n';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createId } from '../lib/id';
+import type { WorkspaceData } from '../lib/workspace';
 import type {
   ApiCollection,
   ApiRequest,
@@ -200,6 +201,8 @@ type AppState = {
   duplicateRequest: (id: string) => string | null;
   moveRequest: (id: string, target?: CreateTarget) => void;
   importCollection: (collection: ApiCollection, importedRequests: ApiRequest[]) => void;
+  importEnvironmentProfile: (profile: EnvironmentProfile) => void;
+  replaceWorkspace: (data: WorkspaceData) => void;
 };
 
 export const useAppStore = create<AppState>()(
@@ -489,6 +492,31 @@ export const useAppStore = create<AppState>()(
             ...state.runtimeByRequest,
             ...Object.fromEntries(normalizedRequests.map((request) => [request.id, emptyRuntime()])),
           },
+        };
+      }),
+      importEnvironmentProfile: (profile) => set((state) => ({
+        environmentProfiles: [...state.environmentProfiles, profile],
+        activeEnvironmentId: profile.id,
+        activeView: 'environments',
+      })),
+      replaceWorkspace: (data) => set((state) => {
+        const requests = data.requests.map(normalizeRequest);
+        const collections = normalizeCollections(data.collections, requests);
+        const environmentProfiles = data.environmentProfiles.length ? data.environmentProfiles : state.environmentProfiles;
+        const activeEnvironmentId = environmentProfiles.some((profile) => profile.id === data.activeEnvironmentId)
+          ? data.activeEnvironmentId
+          : (environmentProfiles[0]?.id ?? '');
+        const activeRequestId = requests[0]?.id ?? '';
+        return {
+          requests,
+          collections,
+          environmentProfiles,
+          activeEnvironmentId,
+          networkSettings: { ...defaultNetworkSettings, ...data.networkSettings },
+          openRequestIds: activeRequestId ? [activeRequestId] : [],
+          activeRequestId,
+          activeView: 'collections',
+          runtimeByRequest: Object.fromEntries(requests.map((request) => [request.id, emptyRuntime()])),
         };
       }),
     }),
