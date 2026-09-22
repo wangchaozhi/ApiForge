@@ -185,7 +185,18 @@ export const zhCN = {
   "Scripts": "脚本",
   "Pre-request Script": "请求前脚本",
   "Tests": "测试脚本",
-  "Script execution will be enabled by Collection Runner.": "脚本执行将在集合运行器中启用。"
+  "Script execution will be enabled by Collection Runner.": "脚本执行将在集合运行器中启用。",
+  "OAuth 2.0": "OAuth 2.0",
+  "Authorization Code": "授权码",
+  "Client Credentials": "客户端凭据",
+  "Authorization URL": "授权地址",
+  "Token URL": "令牌地址",
+  "Client ID": "客户端 ID",
+  "Client Secret": "客户端密钥",
+  "Scopes": "权限范围",
+  "Use PKCE": "使用 PKCE",
+  "Access Token": "访问令牌",
+  "OAuth token acquisition will be added in the next runner/auth step.": "OAuth 自动获取令牌将在下一步运行器/认证开发中接入。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
