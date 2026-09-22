@@ -14,12 +14,14 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
+boa_engine = { version = "0.22.0", default-features = false }
 base64 = "0.23.1"
 cookie_store = "0.22.1"
 reqwest = { version = "0.13.5", features = ["json", "form", "multipart", "stream", "cookies"] }
 reqwest_cookie_store = "0.10.0"
 rusqlite = { version = "0.40.2", features = ["bundled"] }
 serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
 tauri = { version = "2.11.6", features = [] }
 tauri-plugin-dialog = "2.7.3"
 thiserror = "2.0.20"
