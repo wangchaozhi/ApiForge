@@ -1,0 +1,27 @@
+[package]
+name = "apiforge"
+version = "0.5.0"
+description = "A local-first API client built with Tauri"
+authors = ["ApiForge Contributors"]
+edition = "2024"
+rust-version = "1.88"
+
+[lib]
+name = "apiforge_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.3", features = [] }
+
+[dependencies]
+base64 = "0.22.1"
+cookie_store = "0.22.1"
+reqwest = { version = "0.13.5", features = ["json", "form", "multipart", "stream", "cookies"] }
+reqwest_cookie_store = "0.10.0"
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+serde = { version = "1.0.229", features = ["derive"] }
+tauri = { version = "2.11.6", features = [] }
+tauri-plugin-dialog = "2.7.3"
+thiserror = "2.0.20"
+tokio = { version = "1.53.1", features = ["macros"] }
+tokio-util = { version = "0.7.19", features = ["rt"] }

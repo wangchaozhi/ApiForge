@@ -1,0 +1,74 @@
+/* v0.4 collections, request tabs, cancellation, cookies, and response preview */
+.request-workspace { min-height: calc(100vh - 49px); height: calc(100vh - 49px); display: flex; flex-direction: column; overflow: hidden; }
+.request-workspace > .main-grid { flex: 1; min-height: 0; }
+.request-tab-strip { flex: 0 0 38px; min-width: 0; display: flex; align-items: stretch; border-bottom: 1px solid var(--border); background: #111319; }
+.request-tab-scroll { min-width: 0; flex: 1; display: flex; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.request-tab { flex: 0 0 auto; min-width: 150px; max-width: 230px; height: 38px; padding: 0 8px 0 10px; border: 0; border-right: 1px solid var(--border-soft); background: #13151b; display: grid; grid-template-columns: 39px minmax(70px, 1fr) 20px; align-items: center; gap: 4px; color: #8e97a6; cursor: pointer; text-align: left; }
+.request-tab:hover { background: #181b22; }
+.request-tab.active { background: var(--panel); color: #d8dce4; box-shadow: inset 0 -2px 0 var(--accent); }
+.request-tab-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10.5px; }
+.request-tab-close { width: 20px; height: 20px; border: 0; background: transparent; padding: 0; cursor: pointer; display: grid; place-items: center; border-radius: 5px; color: #616a78; }
+.request-tab-close:hover { background: #2a2e37; color: #c6cbd4; }
+.new-tab-button { flex: 0 0 38px; width: 38px; border: 0; border-left: 1px solid var(--border-soft); background: #13151b; color: #7f8897; display: grid; place-items: center; cursor: pointer; }
+.new-tab-button:hover { background: #1b1e25; color: #d6dae2; }
+
+.sidebar { min-height: 0; height: 100vh; }
+.tree-section-label { display: flex; align-items: center; justify-content: space-between; }
+.tree-section-label button, .tree-actions button, .tree-toggle { border: 0; background: transparent; color: #687181; cursor: pointer; display: grid; place-items: center; border-radius: 4px; }
+.tree-section-label button { width: 24px; height: 22px; }
+.tree-section-label button:hover, .tree-actions button:hover, .tree-toggle:hover { color: #cbd1da; background: #22262e; }
+.collection-tree { min-height: 0; flex: 1; overflow: auto; padding-bottom: 8px; }
+.collection-node { margin-bottom: 2px; }
+.tree-row { min-height: 29px; display: flex; align-items: center; gap: 2px; border-radius: 6px; padding: 0 3px; }
+.tree-row:hover { background: #171a21; }
+.tree-toggle { flex: 0 0 20px; width: 20px; height: 22px; }
+.tree-label { min-width: 0; flex: 1; border: 0; background: transparent; color: #a8afbb; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 2px; text-align: left; font-size: 10.5px; }
+.tree-label span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.collection-row > .tree-label { color: #c4c9d2; font-weight: 650; }
+.tree-actions { display: none; flex: 0 0 auto; gap: 1px; }
+.tree-row:hover .tree-actions { display: flex; }
+.tree-actions button { width: 20px; height: 22px; }
+.tree-actions button.danger:hover, .tree-icon-action.danger:hover { color: var(--red); }
+.tree-children { padding-left: 10px; }
+.folder-children { padding-left: 10px; }
+.folder-row { margin-left: 4px; }
+.folder-row > .tree-label { color: #8f98a7; }
+.tree-request-wrap { position: relative; padding-right: 20px; }
+.tree-request-wrap.nested { margin-left: 4px; }
+.tree-request-wrap .request-item { width: 100%; grid-template-columns: 40px minmax(0, 1fr); padding: 6px 6px; }
+.tree-icon-action { display: none; position: absolute; right: 1px; top: 50%; transform: translateY(-50%); width: 20px; height: 22px; }
+.tree-request-wrap:hover .tree-icon-action { display: grid; }
+.tree-empty { color: #596170; font-size: 9.5px; padding: 8px 27px; }
+.unfiled-node { margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--border-soft); }
+.sidebar-footer { flex: 0 0 auto; margin-top: 0; }
+.nav-count { margin-left: auto; min-width: 18px; text-align: center; background: #252a33; border-radius: 99px; padding: 1px 5px; font-size: 9px; }
+
+.send-button.cancel-button { background: #282d36; color: #ff8d8d; border: 1px solid #3a404c; }
+.send-button.cancel-button:hover { background: #303640; }
+.response-error.cancelled { border-color: #3a404c; background: #191c22; color: #abb3c0; }
+.response-error.cancelled p { color: #8e97a5; }
+.response-tabs button:disabled { opacity: .35; cursor: default; }
+.response-editor-wrap { flex: 1; min-height: 0; padding: 0; background: #111319; }
+.response-editor-wrap .monaco-editor-shell { min-height: 0; border: 0; border-radius: 0; }
+.response-preview-shell { flex: 1; min-height: 0; padding: 12px; background: #0d0f13; }
+.response-preview-shell iframe { width: 100%; height: 100%; border: 1px solid var(--border); border-radius: 7px; background: white; }
+
+.cookies-page { min-height: calc(100vh - 49px); max-height: calc(100vh - 49px); display: flex; flex-direction: column; background: var(--panel); overflow: hidden; }
+.page-actions { display: flex; gap: 7px; }
+.page-message { margin: 12px 18px 0; padding: 9px 11px; border: 1px solid var(--border); border-radius: 7px; color: #99a2b0; background: #12151a; font-size: 10px; }
+.cookie-table-wrap { flex: 1; min-height: 0; margin: 18px; overflow: auto; border: 1px solid var(--border); border-radius: 9px; background: #111319; }
+.cookie-row { min-width: 980px; min-height: 40px; display: grid; grid-template-columns: minmax(130px,.8fr) minmax(180px,1.25fr) minmax(150px,1fr) minmax(90px,.55fr) 125px minmax(150px,.9fr) 34px; align-items: center; border-bottom: 1px solid var(--border-soft); }
+.cookie-row:last-child { border-bottom: 0; }
+.cookie-row > * { min-width: 0; padding: 0 9px; color: #aab2bf; font-size: 9.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cookie-head { min-height: 33px; position: sticky; top: 0; z-index: 2; background: #191c23; }
+.cookie-head span { color: #697281; font-size: 9px; text-transform: uppercase; letter-spacing: .6px; }
+.cookie-value { color: #d1d5dd; }
+.cookie-flags { display: flex; gap: 4px; }
+.cookie-flags b { padding: 2px 5px; border-radius: 4px; background: #242a33; color: #8fa5c5; font-size: 8px; font-weight: 650; }
+.cookie-row .icon-button { padding: 0; width: 28px; height: 28px; }
+
+@media (max-width: 1100px) {
+  .request-tab { min-width: 135px; }
+  .tree-actions { display: flex; }
+}
+
