@@ -5,7 +5,7 @@ export function checkVersions(root = new URL('../', import.meta.url), tag = '') 
   const json = (path) => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
   const version = json('package.json').version;
   const cargo = readFileSync(new URL('src-tauri/Cargo.toml', root), 'utf8');
-  const lock = readFileSync(new URL('src-tauri/Cargo.lock', root), 'utf8');
+  const lock = readFileSync(new URL('src-tauri/Cargo.lock', root), 'utf8').replace(/\\r\\n/g, '\\n');
   const versions = [
     json('src-tauri/tauri.conf.json').version,
     json('package-lock.json').version,
