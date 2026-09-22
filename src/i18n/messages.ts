@@ -211,7 +211,9 @@ export const zhCN = {
   "Iteration": "轮次",
   "Request": "请求",
   "No runner results yet": "暂无运行结果",
-  "Choose a collection and start a run.": "选择一个集合并开始运行。"
+  "Choose a collection and start a run.": "选择一个集合并开始运行。",
+  "Method": "方法",
+  "Status": "状态"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
