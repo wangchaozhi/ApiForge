@@ -211,7 +211,15 @@ export const zhCN = {
   "Iteration": "轮次",
   "Request": "请求",
   "No runner results yet": "暂无运行结果",
-  "Choose a collection and start a run.": "选择一个集合并开始运行。"
+  "Choose a collection and start a run.": "选择一个集合并开始运行。",
+  "GraphQL": "GraphQL",
+  "Send GraphQL operations through the same native HTTP engine.": "通过同一个原生 HTTP 引擎发送 GraphQL 操作。",
+  "Query": "查询",
+  "Variables": "变量",
+  "Operation name (optional)": "操作名称（可选）",
+  "GraphQL variables must be valid JSON.": "GraphQL 变量必须是有效 JSON。",
+  "No GraphQL response yet": "暂无 GraphQL 响应",
+  "Write a query and send it to inspect the response.": "编写查询并发送以查看响应。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
