@@ -115,6 +115,19 @@ function postmanAuth(auth: JsonRecord | undefined): AuthConfig {
       addTo: read('apikey', 'in') === 'query' ? 'query' : 'header',
     };
   }
+  if (auth.type === 'oauth2') {
+    return {
+      type: 'oauth2',
+      flow: read('oauth2', 'grant_type') === 'client_credentials' ? 'client-credentials' : 'authorization-code',
+      authorizationUrl: read('oauth2', 'authUrl'),
+      tokenUrl: read('oauth2', 'accessTokenUrl'),
+      clientId: read('oauth2', 'clientId'),
+      clientSecret: read('oauth2', 'clientSecret'),
+      scopes: read('oauth2', 'scope'),
+      usePkce: read('oauth2', 'challengeAlgorithm') !== '',
+      accessToken: read('oauth2', 'accessToken'),
+    };
+  }
   return { type: 'none' };
 }
 
@@ -279,6 +292,21 @@ function authToPostman(auth: AuthConfig) {
         { key: 'key', value: auth.key, type: 'string' },
         { key: 'value', value: auth.value, type: 'string' },
         { key: 'in', value: auth.addTo, type: 'string' },
+      ],
+    };
+  }
+  if (auth.type === 'oauth2') {
+    return {
+      type: 'oauth2',
+      oauth2: [
+        { key: 'grant_type', value: auth.flow === 'client-credentials' ? 'client_credentials' : 'authorization_code', type: 'string' },
+        { key: 'authUrl', value: auth.authorizationUrl, type: 'string' },
+        { key: 'accessTokenUrl', value: auth.tokenUrl, type: 'string' },
+        { key: 'clientId', value: auth.clientId, type: 'string' },
+        { key: 'clientSecret', value: auth.clientSecret, type: 'string' },
+        { key: 'scope', value: auth.scopes, type: 'string' },
+        { key: 'challengeAlgorithm', value: auth.usePkce ? 'S256' : '', type: 'string' },
+        { key: 'accessToken', value: auth.accessToken, type: 'string' },
       ],
     };
   }
