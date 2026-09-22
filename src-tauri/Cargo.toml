@@ -22,6 +22,10 @@ rusqlite = { version = "0.40.2", features = ["bundled"] }
 serde = { version = "1.0.229", features = ["derive"] }
 tauri = { version = "2.11.6", features = [] }
 tauri-plugin-dialog = "2.7.3"
+tauri-plugin-stronghold = "2.3.2"
 thiserror = "2.0.20"
 tokio = { version = "1.53.1", features = ["macros"] }
 tokio-util = { version = "0.7.19", features = ["rt"] }
+
+[profile.dev.package.scrypt]
+opt-level = 3
