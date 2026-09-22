@@ -21,6 +21,9 @@ use tauri::{Manager, State};
 use thiserror::Error;
 use tokio_util::sync::CancellationToken;
 
+mod sse;
+use sse::start_sse;
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct EngineRequest {
@@ -534,7 +537,8 @@ pub fn run() {
             remove_cookie,
             save_history,
             list_history,
-            clear_history
+            clear_history,
+            start_sse
         ])
         .run(tauri::generate_context!())
         .expect("error while running ApiForge");
