@@ -1,3 +1,4 @@
+import { translate as t } from '../i18n';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createId } from '../lib/id';
@@ -33,7 +34,7 @@ export const defaultNetworkSettings: NetworkSettings = {
 
 const starterRequest: ApiRequest = {
   id: createId('req'),
-  name: 'Get JSONPlaceholder post',
+  name: t("Get JSONPlaceholder post"),
   method: 'GET',
   url: 'https://jsonplaceholder.typicode.com/posts/1',
   params: [emptyRow()],
@@ -50,14 +51,14 @@ const starterRequest: ApiRequest = {
 
 const starterCollection: ApiCollection = {
   id: createId('col'),
-  name: 'My Collection',
+  name: t("My Collection"),
   requestIds: [starterRequest.id],
   folders: [],
 };
 
 const emptyRuntime = (): RequestRuntime => ({ response: null, error: null, sending: false, operationId: null });
 
-function newRequest(name = 'Untitled Request'): ApiRequest {
+function newRequest(name = t("Untitled Request")): ApiRequest {
   return {
     id: createId('req'),
     name,
@@ -84,7 +85,7 @@ function normalizeRequest(request: ApiRequest): ApiRequest {
 
 function normalizeCollections(collections: ApiCollection[] | undefined, requests: ApiRequest[]) {
   if (!collections?.length) {
-    return [{ id: createId('col'), name: 'My Collection', requestIds: requests.map((item) => item.id), folders: [] }];
+    return [{ id: createId('col'), name: t("My Collection"), requestIds: requests.map((item) => item.id), folders: [] }];
   }
   const valid = new Set(requests.map((item) => item.id));
   return collections.map((collection) => ({
@@ -303,7 +304,7 @@ export const useAppStore = create<AppState>()(
             [requestId]: { response: null, error, sending: false, operationId: null },
           },
         })),
-      createCollection: (name = 'New Collection') => {
+      createCollection: (name = t("New Collection")) => {
         const id = createId('col');
         set((state) => ({ collections: [...state.collections, { id, name, requestIds: [], folders: [] }] }));
         return id;
@@ -312,7 +313,7 @@ export const useAppStore = create<AppState>()(
         collections: state.collections.map((collection) => collection.id === id ? { ...collection, name: name.trim() || collection.name } : collection),
       })),
       deleteCollection: (id) => set((state) => ({ collections: state.collections.filter((collection) => collection.id !== id) })),
-      createFolder: (collectionId, name = 'New Folder') => {
+      createFolder: (collectionId, name = t("New Folder")) => {
         const id = createId('folder');
         set((state) => ({
           collections: state.collections.map((collection) => collection.id === collectionId
@@ -378,7 +379,7 @@ export const useAppStore = create<AppState>()(
           const duplicate = normalizeRequest({
             ...structuredClone(source),
             id: createId('req'),
-            name: `${source.name} Copy`,
+            name: t('{name} Copy', { name: source.name }),
           });
           duplicatedId = duplicate.id;
           const target = findRequestTarget(state.collections, id);

@@ -82,14 +82,14 @@ Key Rust versions:
 - thiserror 2.0.20
 - tauri-plugin-dialog 2.7.3
 
-`reqwest_cookie_store 0.10.0` uses `cookie_store 0.22.x`, whose minimum supported Rust version is 1.88. Use Rust stable 1.88 or newer.
+`reqwest_cookie_store 0.10.0` uses `cookie_store 0.22.x`, whose minimum supported Rust version is 1.88. The repository uses Rust 1.98.1 via `rust-toolchain.toml`.
 
 ## Run
 
 Prerequisites:
 
 - Node.js 22+
-- Rust stable 1.88+
+- Rust 1.98.1 (installed automatically by rustup)
 - Tauri platform prerequisites for your operating system
 
 Install dependencies and start the desktop app:
@@ -148,3 +148,61 @@ The request data model remains independent from the UI so a future CLI, Collecti
 - Disabling TLS certificate verification is intended only for trusted development/test endpoints.
 - Cookie values may contain credentials/session tokens. The desktop Cookie Store is persisted in the application data directory; treat that profile data as sensitive.
 - Browser-only mode is subject to browser CORS/security rules and cannot enumerate ApiForge's native Cookie Store. Native proxy, TLS overrides, desktop cookie inspection, persistence, and file-path multipart upload require the Tauri runtime.
+
+## Languages
+
+ApiForge supports **English** and **简体中文** across the workspace, settings, dialogs,
+request editors and response views. Open **Settings → Language** to choose a language
+or follow the system language (the default). Chinese system locales use Simplified
+Chinese; other locales fall back to English. The choice survives restarts, and changing
+languages does not rename saved collections/requests or modify request data.
+
+Translations live in `src/i18n/messages.ts`. English source messages are typed keys;
+`{name}` placeholders interpolate display values while `{{variable}}` API variables
+remain literal. `npm test` checks language resolution and placeholder parity.
+
+## CI and releases
+
+The toolchain is pinned to Rust **1.98.1** in `rust-toolchain.toml`. Commit both
+`package-lock.json` and `src-tauri/Cargo.lock`; CI uses `npm ci` and locked Cargo builds.
+Pushes to `main` and pull requests run frontend validation and the same installer
+build matrix used by releases:
+
+| Platform | Architecture | Installers |
+| --- | --- | --- |
+| Windows | x86_64 | NSIS `.exe`, MSI `.msi` |
+| macOS | Apple Silicon (arm64) | `.dmg` |
+| macOS | Intel (x86_64) | `.dmg` |
+| Linux | x86_64 | `.AppImage`, `.deb`, `.rpm` |
+
+**AppImage** is the portable Linux download. It is built on Ubuntu 22.04 for a
+glibc 2.35 baseline; it is not a static binary for every Linux system (for example,
+Alpine/musl is unsupported). Use a compatible desktop distribution and architecture:
+
+```bash
+chmod +x ApiForge_*.AppImage
+./ApiForge_*.AppImage
+# On systems without FUSE:
+./ApiForge_*.AppImage --appimage-extract-and-run
+```
+
+To publish, synchronize the versions in `package.json`, `package-lock.json`,
+`src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`, and `src-tauri/tauri.conf.json`, then run
+`node scripts/check-release-version.mjs`. Commit and push that change before tagging:
+
+```bash
+# Example for the current 0.5.0 version; use the actual version being released.
+git tag -a v0.5.0 -m "ApiForge v0.5.0"
+git push origin v0.5.0
+```
+
+The `Release` workflow rejects a tag whose version differs from the manifests. It
+builds all installers, uploads platform artifacts, and publishes the GitHub Release
+only after all builds succeed. Tags with a suffix such as `v0.6.0-beta.1` produce
+prereleases. Every platform includes a `SHA256SUMS-<platform>.txt` file. A failed
+workflow can be rerun; uploads replace assets with the same name. Manual runs on a
+branch build downloadable artifacts without publishing or creating a tag.
+
+The default pipeline produces unsigned installers and does not require signing
+secrets. macOS notarization and Windows code signing require separately provisioned
+certificates before distributing signed builds.

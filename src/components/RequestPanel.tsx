@@ -1,3 +1,4 @@
+import { translate as t, useLocale } from '../i18n';
 import { useMemo, useState } from 'react';
 import { Download, Send, Square, Upload } from 'lucide-react';
 import { AuthEditor } from './AuthEditor';
@@ -17,14 +18,15 @@ const bodyTypes: BodyType[] = ['none', 'json', 'raw', 'form-urlencoded', 'form-d
 type Tab = 'params' | 'headers' | 'auth' | 'body';
 
 function bodyLabel(bodyType: BodyType) {
-  if (bodyType === 'none') return 'None';
+  if (bodyType === 'none') return t("None");
   if (bodyType === 'json') return 'JSON';
-  if (bodyType === 'raw') return 'Raw';
+  if (bodyType === 'raw') return t("Raw");
   if (bodyType === 'form-urlencoded') return 'x-www-form-urlencoded';
   return 'form-data';
 }
 
 export function RequestPanel() {
+  useLocale();
   const [tab, setTab] = useState<Tab>('params');
   const [curlDialog, setCurlDialog] = useState<'import' | 'export' | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export function RequestPanel() {
     headers: request?.headers.filter((item) => item.enabled && item.key).length ?? 0,
   }), [request]);
 
-  if (!request) return <main className="empty-state">No request selected.</main>;
+  if (!request) return <main className="empty-state">{t("No request selected.")}</main>;
 
   const sending = runtime?.sending ?? false;
   const operationId = runtime?.operationId ?? null;
@@ -93,10 +95,10 @@ export function RequestPanel() {
           value={request.name}
           onChange={(event) => update((current) => ({ ...current, name: event.target.value }))}
         />
-        <span className="dirty-dot" title="Saved locally" />
+        <span className="dirty-dot" title={t("Saved locally")} />
         <div className="request-actions">
-          <button className="text-button" onClick={() => { setImportError(null); setCurlDialog('import'); }}><Download size={13} /> Import cURL</button>
-          <button className="text-button" onClick={() => setCurlDialog('export')}><Upload size={13} /> Export cURL</button>
+          <button className="text-button" onClick={() => { setImportError(null); setCurlDialog('import'); }}><Download size={13} /> {t("Import cURL")}</button>
+          <button className="text-button" onClick={() => setCurlDialog('export')}><Upload size={13} /> {t("Export cURL")}</button>
         </div>
       </div>
 
@@ -120,15 +122,15 @@ export function RequestPanel() {
         />
         <button className={`send-button ${sending ? 'cancel-button' : ''}`} onClick={() => void (sending ? cancel() : send())}>
           {sending ? <Square size={15} /> : <Send size={17} />}
-          {sending ? 'Cancel' : 'Send'}
+          {sending ? t("Cancel") : t("Send")}
         </button>
       </div>
 
       <div className="tabs">
-        <button className={tab === 'params' ? 'active' : ''} onClick={() => setTab('params')}>Params <span>{counts.params}</span></button>
-        <button className={tab === 'headers' ? 'active' : ''} onClick={() => setTab('headers')}>Headers <span>{counts.headers}</span></button>
-        <button className={tab === 'auth' ? 'active' : ''} onClick={() => setTab('auth')}>Authorization</button>
-        <button className={tab === 'body' ? 'active' : ''} onClick={() => setTab('body')}>Body</button>
+        <button className={tab === 'params' ? 'active' : ''} onClick={() => setTab('params')}>{t("Params")} <span>{counts.params}</span></button>
+        <button className={tab === 'headers' ? 'active' : ''} onClick={() => setTab('headers')}>{t("Headers")} <span>{counts.headers}</span></button>
+        <button className={tab === 'auth' ? 'active' : ''} onClick={() => setTab('auth')}>{t("Authorization")}</button>
+        <button className={tab === 'body' ? 'active' : ''} onClick={() => setTab('body')}>{t("Body")}</button>
       </div>
 
       <div className="tab-content">
@@ -168,8 +170,8 @@ export function RequestPanel() {
               <KeyValueEditor
                 rows={request.formFields}
                 onChange={(formFields) => update((current) => ({ ...current, formFields }))}
-                keyPlaceholder="Key"
-                valuePlaceholder="Value"
+                keyPlaceholder={t("Key")}
+                valuePlaceholder={t("Value")}
               />
             )}
             {request.bodyType === 'form-data' && (

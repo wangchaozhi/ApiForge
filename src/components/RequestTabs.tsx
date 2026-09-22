@@ -1,7 +1,9 @@
+import { translate as t, useLocale } from '../i18n';
 import { Plus, X } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 
 export function RequestTabs() {
+  useLocale();
   const requests = useAppStore((state) => state.requests);
   const openRequestIds = useAppStore((state) => state.openRequestIds);
   const activeRequestId = useAppStore((state) => state.activeRequestId);
@@ -12,7 +14,7 @@ export function RequestTabs() {
   const requestById = new Map(requests.map((request) => [request.id, request]));
 
   return (
-    <div className="request-tab-strip" role="tablist" aria-label="Open requests">
+    <div className="request-tab-strip" role="tablist" aria-label={t("Open requests")}>
       <div className="request-tab-scroll">
         {openRequestIds.map((id) => {
           const request = requestById.get(id);
@@ -37,8 +39,8 @@ export function RequestTabs() {
               <button
                 className="request-tab-close"
                 type="button"
-                title="Close tab"
-                aria-label={`Close ${request.name}`}
+                title={t("Close tab")}
+                aria-label={t('Close {name}', { name: request.name })}
                 onClick={(event) => {
                   event.stopPropagation();
                   closeRequest(id);
@@ -50,7 +52,7 @@ export function RequestTabs() {
           );
         })}
       </div>
-      <button className="new-tab-button" type="button" title="New request" onClick={() => createRequest()}><Plus size={14} /></button>
+      <button className="new-tab-button" type="button" title={t("New request")} onClick={() => createRequest()}><Plus size={14} /></button>
     </div>
   );
 }

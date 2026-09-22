@@ -1,3 +1,4 @@
+import { translate as t, useLocale } from '../i18n';
 import { Plus, Trash2 } from 'lucide-react';
 import { createId } from '../lib/id';
 import type { KeyValue } from '../types/api';
@@ -12,9 +13,10 @@ type Props = {
 export function KeyValueEditor({
   rows,
   onChange,
-  keyPlaceholder = 'Key',
-  valuePlaceholder = 'Value',
+  keyPlaceholder = t("Key"),
+  valuePlaceholder = t("Value"),
 }: Props) {
+  useLocale();
   const patch = (id: string, values: Partial<KeyValue>) => {
     onChange(rows.map((row) => (row.id === id ? { ...row, ...values } : row)));
   };
@@ -43,7 +45,7 @@ export function KeyValueEditor({
             type="checkbox"
             checked={row.enabled}
             onChange={(event) => patch(row.id, { enabled: event.target.checked })}
-            aria-label="Enable row"
+            aria-label={t("Enable row")}
           />
           <input
             value={row.key}
@@ -55,13 +57,13 @@ export function KeyValueEditor({
             onChange={(event) => patch(row.id, { value: event.target.value })}
             placeholder={valuePlaceholder}
           />
-          <button className="icon-button ghost" onClick={() => remove(row.id)} aria-label="Delete row">
+          <button className="icon-button ghost" onClick={() => remove(row.id)} aria-label={t("Delete row")}>
             <Trash2 size={14} />
           </button>
         </div>
       ))}
       <button className="add-row" onClick={add}>
-        <Plus size={14} /> Add row
+        <Plus size={14} /> {t("Add row")}
       </button>
     </div>
   );

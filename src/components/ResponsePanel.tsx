@@ -1,3 +1,4 @@
+import { translate as t, useLocale } from '../i18n';
 import { AlertCircle, Braces, Code2, Eye, FileJson2, ListTree, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useAppStore } from '../store/appStore';
@@ -55,6 +56,7 @@ function countMatches(haystack: string, needle: string) {
 }
 
 export function ResponsePanel() {
+  useLocale();
   const [tab, setTab] = useState<Tab>('pretty');
   const [searchQuery, setSearchQuery] = useState('');
   const activeRequestId = useAppStore((state) => state.activeRequestId);
@@ -70,14 +72,14 @@ export function ResponsePanel() {
   const isImage = Boolean(response && isBinary && contentType.startsWith('image/'));
   const isPdf = Boolean(response && isBinary && contentType.includes('application/pdf'));
   const canPreview = isHtml || isImage || isPdf;
-  const cancelled = Boolean(error && error.toLowerCase().includes('cancel'));
+  const cancelled = Boolean(error && (error.toLowerCase().includes('cancel') || error.includes('已取消')));
   const searchableText = response && !isBinary ? (tab === 'pretty' ? pretty : response.body) : '';
   const matchCount = useMemo(() => countMatches(searchableText, searchQuery), [searchableText, searchQuery]);
 
   return (
     <section className="response-panel">
       <div className="response-heading">
-        <strong>Response</strong>
+        <strong>{t("Response")}</strong>
         {response && (
           <div className="response-meta">
             <span className={response.status < 400 ? 'status-ok' : 'status-bad'}>{response.status} {response.statusText}</span>
@@ -91,28 +93,28 @@ export function ResponsePanel() {
         <div className={`response-error ${cancelled ? 'cancelled' : ''}`}>
           <AlertCircle size={18} />
           <div>
-            <strong>{cancelled ? 'Request cancelled' : 'Request failed'}</strong>
+            <strong>{cancelled ? t("Request cancelled") : t("Request failed")}</strong>
             <p>{error}</p>
-            {!cancelled && <small>Tip: browser preview is subject to CORS. Run with Tauri for unrestricted desktop HTTP requests.</small>}
+            {!cancelled && <small>{t("Tip: browser preview is subject to CORS. Run with Tauri for unrestricted desktop HTTP requests.")}</small>}
           </div>
         </div>
       ) : !response ? (
         <div className="response-empty">
           <div className="empty-icon"><Braces size={22} /></div>
-          <strong>{sending ? 'Sending request…' : 'Send a request to see the response'}</strong>
-          <span>{sending ? 'Use Cancel to abort the in-flight request.' : 'Use Ctrl/⌘ + Enter from the URL field for a shortcut.'}</span>
+          <strong>{sending ? t("Sending request…") : t("Send a request to see the response")}</strong>
+          <span>{sending ? t("Use Cancel to abort the in-flight request.") : t("Use Ctrl/⌘ + Enter from the URL field for a shortcut.")}</span>
         </div>
       ) : (
         <>
           <div className="tabs response-tabs">
-            <button className={tab === 'pretty' ? 'active' : ''} disabled={isBinary} onClick={() => setTab('pretty')}><FileJson2 size={14} /> Pretty</button>
-            <button className={tab === 'raw' ? 'active' : ''} onClick={() => setTab('raw')}><Code2 size={14} /> Raw</button>
-            <button className={tab === 'preview' ? 'active' : ''} disabled={!canPreview} title={canPreview ? 'Preview response' : 'Preview supports HTML, images, and PDF'} onClick={() => setTab('preview')}><Eye size={14} /> Preview</button>
-            <button className={tab === 'headers' ? 'active' : ''} onClick={() => setTab('headers')}><ListTree size={14} /> Headers <span>{Object.keys(response.headers).length}</span></button>
+            <button className={tab === 'pretty' ? 'active' : ''} disabled={isBinary} onClick={() => setTab('pretty')}><FileJson2 size={14} /> {t("Pretty")}</button>
+            <button className={tab === 'raw' ? 'active' : ''} onClick={() => setTab('raw')}><Code2 size={14} /> {t("Raw")}</button>
+            <button className={tab === 'preview' ? 'active' : ''} disabled={!canPreview} title={canPreview ? t("Preview response") : t("Preview supports HTML, images, and PDF")} onClick={() => setTab('preview')}><Eye size={14} /> {t("Preview")}</button>
+            <button className={tab === 'headers' ? 'active' : ''} onClick={() => setTab('headers')}><ListTree size={14} /> {t("Headers")} <span>{Object.keys(response.headers).length}</span></button>
             {!isBinary && (tab === 'pretty' || tab === 'raw') && (
               <label className="response-search">
                 <Search size={13} />
-                <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search response" />
+                <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t("Search response")} />
                 {searchQuery && <span>{matchCount}</span>}
               </label>
             )}
@@ -125,9 +127,9 @@ export function ResponsePanel() {
             </div>
           ) : tab === 'preview' && canPreview ? (
             <div className="response-preview-shell">
-              {isHtml && <iframe title="Response preview" sandbox="" referrerPolicy="no-referrer" srcDoc={response.body} />}
-              {isImage && <div className="binary-image-preview"><img alt="API response preview" src={`data:${contentType || 'application/octet-stream'};base64,${response.body}`} /></div>}
-              {isPdf && <iframe title="PDF response preview" src={`data:application/pdf;base64,${response.body}`} />}
+              {isHtml && <iframe title={t("Response preview")} sandbox="" referrerPolicy="no-referrer" srcDoc={response.body} />}
+              {isImage && <div className="binary-image-preview"><img alt={t("API response preview")} src={`data:${contentType || 'application/octet-stream'};base64,${response.body}`} /></div>}
+              {isPdf && <iframe title={t("PDF response preview")} src={`data:application/pdf;base64,${response.body}`} />}
             </div>
           ) : (
             <div className="response-editor-wrap">
@@ -138,7 +140,7 @@ export function ResponsePanel() {
                 height="100%"
                 searchQuery={isBinary ? '' : searchQuery}
               />
-              {isBinary && <div className="binary-encoding-badge">Binary response shown as Base64</div>}
+              {isBinary && <div className="binary-encoding-badge">{t("Binary response shown as Base64")}</div>}
             </div>
           )}
         </>

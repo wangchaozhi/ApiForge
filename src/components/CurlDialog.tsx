@@ -1,3 +1,4 @@
+import { translate as t, useLocale } from '../i18n';
 import { useEffect, useState } from 'react';
 import { Clipboard, X } from 'lucide-react';
 
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function CurlDialog({ mode, initialValue = '', onClose, onImport }: Props) {
+  useLocale();
   const [value, setValue] = useState(initialValue);
   const [copied, setCopied] = useState(false);
 
@@ -31,8 +33,8 @@ export function CurlDialog({ mode, initialValue = '', onClose, onImport }: Props
       <div className="dialog-card" role="dialog" aria-modal="true">
         <div className="dialog-title">
           <div>
-            <strong>{mode === 'import' ? 'Import cURL' : 'Export cURL'}</strong>
-            <span>{mode === 'import' ? 'Paste a cURL command to create a new request.' : 'Copy this command to your terminal.'}</span>
+            <strong>{mode === 'import' ? t("Import cURL") : t("Export cURL")}</strong>
+            <span>{mode === 'import' ? t("Paste a cURL command to create a new request.") : t("Copy this command to your terminal.")}</span>
           </div>
           <button className="icon-button ghost" onClick={onClose}><X size={17} /></button>
         </div>
@@ -46,11 +48,11 @@ export function CurlDialog({ mode, initialValue = '', onClose, onImport }: Props
           spellCheck={false}
         />
         <div className="dialog-actions">
-          <button className="secondary-button" onClick={onClose}>Cancel</button>
+          <button className="secondary-button" onClick={onClose}>{t("Cancel")}</button>
           {mode === 'export' ? (
-            <button className="primary-button" onClick={() => void copy()}><Clipboard size={15} /> {copied ? 'Copied' : 'Copy cURL'}</button>
+            <button className="primary-button" onClick={() => void copy()}><Clipboard size={15} /> {copied ? t("Copied") : t("Copy cURL")}</button>
           ) : (
-            <button className="primary-button" onClick={() => onImport?.(value)} disabled={!value.trim()}>Import Request</button>
+            <button className="primary-button" onClick={() => onImport?.(value)} disabled={!value.trim()}>{t("Import Request")}</button>
           )}
         </div>
       </div>

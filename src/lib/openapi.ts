@@ -1,3 +1,4 @@
+import { translate as t } from '../i18n';
 import YAML from 'yaml';
 import { createId } from './id';
 import type { ApiCollection, ApiRequest, AuthConfig, HttpMethod, KeyValue, MultipartField } from '../types/api';
@@ -169,7 +170,7 @@ function openApiBaseUrl(document: AnyRecord) {
 export function parseOpenApi(source: string, fileName = 'OpenAPI'): ImportedOpenApi {
   const document = YAML.parse(source) as AnyRecord;
   if (!document || typeof document !== 'object' || (!document.openapi && !document.swagger)) {
-    throw new Error('The selected file is not an OpenAPI/Swagger document.');
+    throw new Error(t("The selected file is not an OpenAPI/Swagger document."));
   }
 
   const collectionId = createId('col');
@@ -219,7 +220,7 @@ export function parseOpenApi(source: string, fileName = 'OpenAPI'): ImportedOpen
     }
   }
 
-  if (!requests.length) throw new Error('No HTTP operations were found in this OpenAPI document.');
+  if (!requests.length) throw new Error(t("No HTTP operations were found in this OpenAPI document."));
 
   return {
     collection: {

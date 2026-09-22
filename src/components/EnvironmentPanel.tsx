@@ -1,7 +1,9 @@
+import { translate as t, useLocale } from '../i18n';
 import { Plus, Trash2 } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 
 export function EnvironmentPanel() {
+  useLocale();
   const environments = useAppStore((state) => state.environments);
   const setEnvironment = useAppStore((state) => state.setEnvironment);
   const removeEnvironment = useAppStore((state) => state.removeEnvironment);
@@ -18,11 +20,11 @@ export function EnvironmentPanel() {
   return (
     <section className="environment-page">
       <header className="page-header">
-        <div><strong>Environment</strong><span>Use variables as {'{{key}}'} in URL, headers, params, auth, or body.</span></div>
-        <button className="primary-button compact" onClick={add}><Plus size={14} /> Add variable</button>
+        <div><strong>{t("Environment")}</strong><span>{t('Use variables as {syntax} in URL, headers, params, auth, or body.', { syntax: '{{key}}' })}</span></div>
+        <button className="primary-button compact" onClick={add}><Plus size={14} /> {t("Add variable")}</button>
       </header>
       <div className="environment-table">
-        <div className="environment-row head"><span>Variable</span><span>Value</span><span /></div>
+        <div className="environment-row head"><span>{t("Variable")}</span><span>{t("Value")}</span><span /></div>
         {entries.map(([key, value]) => (
           <div className="environment-row" key={key}>
             <input defaultValue={key} onBlur={(event) => replaceEnvironmentKey(key, event.target.value)} spellCheck={false} />

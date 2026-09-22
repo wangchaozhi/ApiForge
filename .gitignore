@@ -6,3 +6,6 @@ src-tauri/target
 .idea
 .vscode/*
 !.vscode/extensions.json
+
+src-tauri/gen/
+release-artifacts/

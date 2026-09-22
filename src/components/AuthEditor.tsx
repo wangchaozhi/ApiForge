@@ -1,3 +1,5 @@
+import { translate as t, useLocale } from '../i18n';
+import type { MessageKey } from '../i18n/messages';
 import type { ApiRequest, AuthConfig } from '../types/api';
 
 type Props = {
@@ -5,14 +7,15 @@ type Props = {
   onChange: (auth: AuthConfig) => void;
 };
 
-const authTypes: Array<{ value: AuthConfig['type']; label: string }> = [
-  { value: 'none', label: 'No Auth' },
-  { value: 'bearer', label: 'Bearer Token' },
-  { value: 'basic', label: 'Basic Auth' },
-  { value: 'apiKey', label: 'API Key' },
+const authTypes: Array<{ value: AuthConfig['type']; label: MessageKey }> = [
+  { value: 'none', label: "No Auth" },
+  { value: 'bearer', label: "Bearer Token" },
+  { value: 'basic', label: "Basic Auth" },
+  { value: 'apiKey', label: "API Key" },
 ];
 
 export function AuthEditor({ request, onChange }: Props) {
+  useLocale();
   const auth = request.auth ?? { type: 'none' as const };
 
   const setType = (type: AuthConfig['type']) => {
@@ -25,23 +28,23 @@ export function AuthEditor({ request, onChange }: Props) {
   return (
     <div className="auth-editor">
       <div className="auth-type-column">
-        <label>Auth Type</label>
+        <label>{t("Auth Type")}</label>
         <select value={auth.type} onChange={(event) => setType(event.target.value as AuthConfig['type'])}>
-          {authTypes.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
+          {authTypes.map((item) => <option value={item.value} key={item.value}>{t(item.label)}</option>)}
         </select>
       </div>
 
       <div className="auth-fields">
         {auth.type === 'none' && (
-          <div className="inline-empty">This request does not add authentication automatically.</div>
+          <div className="inline-empty">{t("This request does not add authentication automatically.")}</div>
         )}
         {auth.type === 'bearer' && (
           <label>
-            <span>Token</span>
+            <span>{t("Token")}</span>
             <input
               type="password"
               value={auth.token}
-              placeholder="{{token}} or paste a bearer token"
+              placeholder={t("{{token}} or paste a bearer token")}
               onChange={(event) => onChange({ ...auth, token: event.target.value })}
             />
           </label>
@@ -49,11 +52,11 @@ export function AuthEditor({ request, onChange }: Props) {
         {auth.type === 'basic' && (
           <>
             <label>
-              <span>Username</span>
+              <span>{t("Username")}</span>
               <input value={auth.username} onChange={(event) => onChange({ ...auth, username: event.target.value })} />
             </label>
             <label>
-              <span>Password</span>
+              <span>{t("Password")}</span>
               <input type="password" value={auth.password} onChange={(event) => onChange({ ...auth, password: event.target.value })} />
             </label>
           </>
@@ -61,18 +64,18 @@ export function AuthEditor({ request, onChange }: Props) {
         {auth.type === 'apiKey' && (
           <>
             <label>
-              <span>Key</span>
+              <span>{t("Key")}</span>
               <input value={auth.key} onChange={(event) => onChange({ ...auth, key: event.target.value })} />
             </label>
             <label>
-              <span>Value</span>
+              <span>{t("Value")}</span>
               <input type="password" value={auth.value} onChange={(event) => onChange({ ...auth, value: event.target.value })} />
             </label>
             <label>
-              <span>Add to</span>
+              <span>{t("Add to")}</span>
               <select value={auth.addTo} onChange={(event) => onChange({ ...auth, addTo: event.target.value as 'header' | 'query' })}>
-                <option value="header">Header</option>
-                <option value="query">Query Params</option>
+                <option value="header">{t("Header")}</option>
+                <option value="query">{t("Query Params")}</option>
               </select>
             </label>
           </>

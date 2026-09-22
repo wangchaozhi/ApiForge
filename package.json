@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "check": "tsc -b --pretty false",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "2.11.1",
@@ -17,11 +18,12 @@
     "monaco-editor": "0.56.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "zustand": "5.0.15",
-    "yaml": "2.9.1"
+    "yaml": "2.9.1",
+    "zustand": "5.0.15"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.11.5",
+    "@types/node": "26.6.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",

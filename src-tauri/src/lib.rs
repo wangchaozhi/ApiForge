@@ -7,15 +7,15 @@ use std::{
     time::{Duration, Instant},
 };
 
-use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64_STANDARD};
 use reqwest::{
+    Client, Method, Proxy,
     header::{HeaderMap, HeaderName, HeaderValue},
     multipart,
     redirect::Policy,
-    Client, Method, Proxy,
 };
 use reqwest_cookie_store::{CookieStore, CookieStoreMutex};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use tauri::{Manager, State};
 use thiserror::Error;
@@ -255,7 +255,7 @@ async fn execute_request(
         .user_agent(concat!("ApiForge/", env!("CARGO_PKG_VERSION")));
 
     if request.network.cookies_enabled {
-        client_builder = client_builder.cookie_provider(cookie_jar);
+        client_builder = client_builder.cookie_provider(Arc::clone(&cookie_jar));
     }
 
     let proxy_url = request.network.proxy_url.trim();
@@ -315,7 +315,10 @@ async fn execute_request(
     let bytes = response.bytes().await?;
     let size_bytes = bytes.len();
     let (body, body_encoding) = if is_textual_content_type(content_type) {
-        (String::from_utf8_lossy(&bytes).into_owned(), "utf8".to_string())
+        (
+            String::from_utf8_lossy(&bytes).into_owned(),
+            "utf8".to_string(),
+        )
     } else {
         (BASE64_STANDARD.encode(&bytes), "base64".to_string())
     };
@@ -380,18 +383,28 @@ fn cancel_request(operation_id: String, http_state: State<'_, HttpState>) -> Res
 
 #[tauri::command]
 fn clear_cookie_jar(http_state: State<'_, HttpState>) -> Result<(), AppError> {
-    let mut store = http_state.cookie_jar.lock().map_err(|_| AppError::CookieLock)?;
+    let mut store = http_state
+        .cookie_jar
+        .lock()
+        .map_err(|_| AppError::CookieLock)?;
     store.clear();
     persist_cookie_store(&store, &http_state.cookie_path)
 }
 
 #[tauri::command]
 fn list_cookies(http_state: State<'_, HttpState>) -> Result<Vec<CookieInfo>, AppError> {
-    let store = http_state.cookie_jar.lock().map_err(|_| AppError::CookieLock)?;
+    let store = http_state
+        .cookie_jar
+        .lock()
+        .map_err(|_| AppError::CookieLock)?;
     let mut cookies = store
         .iter_unexpired()
         .map(|cookie| CookieInfo {
-            domain: cookie.domain.as_cow().map(|value| value.into_owned()).unwrap_or_default(),
+            domain: cookie
+                .domain
+                .as_cow()
+                .map(|value| value.into_owned())
+                .unwrap_or_default(),
             path: cookie.path.as_ref().to_owned(),
             name: cookie.name().to_string(),
             value: cookie.value().to_string(),
@@ -411,14 +424,20 @@ fn remove_cookie(
     name: String,
     http_state: State<'_, HttpState>,
 ) -> Result<(), AppError> {
-    let mut store = http_state.cookie_jar.lock().map_err(|_| AppError::CookieLock)?;
+    let mut store = http_state
+        .cookie_jar
+        .lock()
+        .map_err(|_| AppError::CookieLock)?;
     store.remove(&domain, &path, &name);
     persist_cookie_store(&store, &http_state.cookie_path)
 }
 
 #[tauri::command]
 fn save_history(entry: HistoryEntry, database: State<'_, Database>) -> Result<(), AppError> {
-    let connection = database.connection.lock().map_err(|_| AppError::DatabaseLock)?;
+    let connection = database
+        .connection
+        .lock()
+        .map_err(|_| AppError::DatabaseLock)?;
     connection.execute(
         "INSERT OR REPLACE INTO history (
             id, request_id, request_name, method, url, status, status_text,
@@ -449,8 +468,14 @@ fn save_history(entry: HistoryEntry, database: State<'_, Database>) -> Result<()
 }
 
 #[tauri::command]
-fn list_history(limit: Option<u32>, database: State<'_, Database>) -> Result<Vec<HistoryEntry>, AppError> {
-    let connection = database.connection.lock().map_err(|_| AppError::DatabaseLock)?;
+fn list_history(
+    limit: Option<u32>,
+    database: State<'_, Database>,
+) -> Result<Vec<HistoryEntry>, AppError> {
+    let connection = database
+        .connection
+        .lock()
+        .map_err(|_| AppError::DatabaseLock)?;
     let limit = limit.unwrap_or(200).clamp(1, 500);
     let limit_i64 = limit as i64;
     let mut statement = connection.prepare(
@@ -483,7 +508,10 @@ fn list_history(limit: Option<u32>, database: State<'_, Database>) -> Result<Vec
 
 #[tauri::command]
 fn clear_history(database: State<'_, Database>) -> Result<(), AppError> {
-    let connection = database.connection.lock().map_err(|_| AppError::DatabaseLock)?;
+    let connection = database
+        .connection
+        .lock()
+        .map_err(|_| AppError::DatabaseLock)?;
     connection.execute("DELETE FROM history", [])?;
     Ok(())
 }

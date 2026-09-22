@@ -1,3 +1,4 @@
+import { translate as t } from '../i18n';
 import type { ApiRequest, ApiResponse, CookieInfo, EngineBody, EngineRequest, NetworkSettings } from '../types/api';
 
 const browserControllers = new Map<string, AbortController>();
@@ -138,7 +139,7 @@ function browserBody(body: EngineBody): BodyInit | undefined {
 
   const form = new FormData();
   for (const field of body.fields) {
-    if (field.kind === 'file') throw new Error('Multipart file uploads require the Tauri desktop runtime.');
+    if (field.kind === 'file') throw new Error(t("Multipart file uploads require the Tauri desktop runtime."));
     form.append(field.key, field.value);
   }
   return form;
@@ -188,7 +189,7 @@ export async function sendApiRequest(request: EngineRequest, operationId: string
       sizeBytes,
     };
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') throw new Error('Request cancelled.');
+    if (error instanceof DOMException && error.name === 'AbortError') throw new Error(t("Request cancelled."));
     throw error;
   } finally {
     browserControllers.delete(operationId);

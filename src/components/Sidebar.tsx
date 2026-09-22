@@ -1,3 +1,4 @@
+import { translate as t, useLocale } from '../i18n';
 import {
   Braces,
   ChevronDown,
@@ -21,6 +22,7 @@ import { parseOpenApi } from '../lib/openapi';
 import { useAppStore, type CreateTarget } from '../store/appStore';
 
 export function Sidebar() {
+  useLocale();
   const requests = useAppStore((state) => state.requests);
   const collections = useAppStore((state) => state.collections);
   const activeRequestId = useAppStore((state) => state.activeRequestId);
@@ -58,7 +60,7 @@ export function Sidebar() {
   const toggle = (id: string) => setCollapsed((current) => ({ ...current, [id]: !current[id] }));
 
   const chooseMoveTarget = (requestName: string): CreateTarget | undefined | null => {
-    const targets: Array<{ label: string; target: CreateTarget | undefined }> = [{ label: 'Unfiled', target: undefined }];
+    const targets: Array<{ label: string; target: CreateTarget | undefined }> = [{ label: t("Unfiled"), target: undefined }];
     for (const collection of collections) {
       targets.push({ label: collection.name, target: { collectionId: collection.id } });
       for (const folder of collection.folders) {
@@ -66,11 +68,11 @@ export function Sidebar() {
       }
     }
     const menu = targets.map((item, index) => `${index + 1}. ${item.label}`).join('\n');
-    const choice = window.prompt(`Move “${requestName}” to:\n\n${menu}\n\nEnter a number:`);
+    const choice = window.prompt(t('Move “{name}” to:\n\n{menu}\n\nEnter a number:', { name: requestName, menu }));
     if (choice === null) return null;
     const index = Number(choice) - 1;
     if (!Number.isInteger(index) || index < 0 || index >= targets.length) {
-      window.alert('Invalid destination.');
+      window.alert(t("Invalid destination."));
       return null;
     }
     return targets[index].target;
@@ -89,16 +91,16 @@ export function Sidebar() {
           <span className="request-name">{request.name}</span>
         </button>
         <div className="tree-request-actions">
-          <button className="tree-icon-action" title="Duplicate request" onClick={() => duplicateRequest(request.id)}><Copy size={11} /></button>
-          <button className="tree-icon-action" title="Move request" onClick={() => {
+          <button className="tree-icon-action" title={t("Duplicate request")} onClick={() => duplicateRequest(request.id)}><Copy size={11} /></button>
+          <button className="tree-icon-action" title={t("Move request")} onClick={() => {
             const target = chooseMoveTarget(request.name);
             if (target !== null) moveRequest(request.id, target);
           }}><MoveRight size={11} /></button>
           <button
             className="tree-icon-action danger"
-            title="Delete request"
+            title={t("Delete request")}
             onClick={() => {
-              if (window.confirm(`Delete “${request.name}”?`)) deleteRequest(request.id);
+              if (window.confirm(t('Delete “{name}”?', { name: request.name }))) deleteRequest(request.id);
             }}
           >
             <Trash2 size={11} />
@@ -123,29 +125,29 @@ export function Sidebar() {
         <div className="brand-mark">A</div>
         <div>
           <strong>ApiForge</strong>
-          <span>Local workspace</span>
+          <span>{t("Local workspace")}</span>
         </div>
       </div>
 
       <button className="new-request" onClick={() => createRequest()}>
-        <Plus size={16} /> New Request
+        <Plus size={16} /> {t("New Request")}
       </button>
 
-      <nav className="nav-list" aria-label="Workspace navigation">
-        <button className={`nav-item ${activeView === 'collections' ? 'active-static' : ''}`} onClick={() => setActiveView('collections')}><Folder size={15} /> Collections</button>
-        <button className={`nav-item ${activeView === 'history' ? 'active-static' : ''}`} onClick={() => setActiveView('history')}><Clock3 size={15} /> History {historyCount > 0 && <span className="nav-count">{historyCount}</span>}</button>
-        <button className={`nav-item ${activeView === 'environments' ? 'active-static' : ''}`} onClick={() => setActiveView('environments')}><Braces size={15} /> Environments</button>
-        <button className={`nav-item ${activeView === 'cookies' ? 'active-static' : ''}`} onClick={() => setActiveView('cookies')}><Cookie size={15} /> Cookies</button>
+      <nav className="nav-list" aria-label={t("Workspace navigation")}>
+        <button className={`nav-item ${activeView === 'collections' ? 'active-static' : ''}`} onClick={() => setActiveView('collections')}><Folder size={15} /> {t("Collections")}</button>
+        <button className={`nav-item ${activeView === 'history' ? 'active-static' : ''}`} onClick={() => setActiveView('history')}><Clock3 size={15} /> {t("History")} {historyCount > 0 && <span className="nav-count">{historyCount}</span>}</button>
+        <button className={`nav-item ${activeView === 'environments' ? 'active-static' : ''}`} onClick={() => setActiveView('environments')}><Braces size={15} /> {t("Environments")}</button>
+        <button className={`nav-item ${activeView === 'cookies' ? 'active-static' : ''}`} onClick={() => setActiveView('cookies')}><Cookie size={15} /> {t("Cookies")}</button>
       </nav>
 
       <div className="section-label tree-section-label">
-        <span>Collections</span>
+        <span>{t("Collections")}</span>
         <div className="section-label-actions">
-          <button title="Import OpenAPI JSON/YAML" onClick={() => importInputRef.current?.click()}><Upload size={13} /></button>
+          <button title={t("Import OpenAPI JSON/YAML")} onClick={() => importInputRef.current?.click()}><Upload size={13} /></button>
           <button
-            title="New collection"
+            title={t("New collection")}
             onClick={() => {
-              const name = window.prompt('Collection name', 'New Collection');
+              const name = window.prompt(t("Collection name"), t("New Collection"));
               if (name?.trim()) createCollection(name.trim());
             }}
           ><Plus size={13} /></button>
@@ -190,25 +192,25 @@ export function Sidebar() {
               }}
             >
               <div className="tree-row collection-row">
-                <span className="collection-drag-handle" title="Drag to reorder"><GripVertical size={11} /></span>
-                <button className="tree-toggle" onClick={() => toggle(collection.id)} title={isCollapsed ? 'Expand' : 'Collapse'}>
+                <span className="collection-drag-handle" title={t("Drag to reorder")}><GripVertical size={11} /></span>
+                <button className="tree-toggle" onClick={() => toggle(collection.id)} title={isCollapsed ? t("Expand") : t("Collapse")}>
                   {isCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
                 </button>
                 <button className="tree-label" onClick={() => toggle(collection.id)} title={collection.name}>
                   <Folder size={13} /><span>{collection.name}</span>
                 </button>
                 <div className="tree-actions">
-                  <button title="New request" onClick={() => createRequest({ collectionId: collection.id })}><FilePlus2 size={11} /></button>
-                  <button title="New folder" onClick={() => {
-                    const name = window.prompt('Folder name', 'New Folder');
+                  <button title={t("New request")} onClick={() => createRequest({ collectionId: collection.id })}><FilePlus2 size={11} /></button>
+                  <button title={t("New folder")} onClick={() => {
+                    const name = window.prompt(t("Folder name"), t("New Folder"));
                     if (name?.trim()) createFolder(collection.id, name.trim());
                   }}><FolderPlus size={11} /></button>
-                  <button title="Rename collection" onClick={() => {
-                    const name = window.prompt('Rename collection', collection.name);
+                  <button title={t("Rename collection")} onClick={() => {
+                    const name = window.prompt(t("Rename collection"), collection.name);
                     if (name?.trim()) renameCollection(collection.id, name.trim());
                   }}><Pencil size={11} /></button>
-                  <button className="danger" title="Delete collection" onClick={() => {
-                    if (window.confirm(`Delete collection “${collection.name}”? Requests will remain under Unfiled.`)) deleteCollection(collection.id);
+                  <button className="danger" title={t("Delete collection")} onClick={() => {
+                    if (window.confirm(t('Delete collection “{name}”? Requests will remain under Unfiled.', { name: collection.name }))) deleteCollection(collection.id);
                   }}><Trash2 size={11} /></button>
                 </div>
               </div>
@@ -225,13 +227,13 @@ export function Sidebar() {
                           <button className="tree-toggle" onClick={() => toggle(folderKey)}>{folderCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}</button>
                           <button className="tree-label" onClick={() => toggle(folderKey)} title={folder.name}><Folder size={12} /><span>{folder.name}</span></button>
                           <div className="tree-actions">
-                            <button title="New request in folder" onClick={() => createRequest({ collectionId: collection.id, folderId: folder.id })}><FilePlus2 size={11} /></button>
-                            <button title="Rename folder" onClick={() => {
-                              const name = window.prompt('Rename folder', folder.name);
+                            <button title={t("New request in folder")} onClick={() => createRequest({ collectionId: collection.id, folderId: folder.id })}><FilePlus2 size={11} /></button>
+                            <button title={t("Rename folder")} onClick={() => {
+                              const name = window.prompt(t("Rename folder"), folder.name);
                               if (name?.trim()) renameFolder(collection.id, folder.id, name.trim());
                             }}><Pencil size={11} /></button>
-                            <button className="danger" title="Delete folder" onClick={() => {
-                              if (window.confirm(`Delete folder “${folder.name}”? Its requests will move to the collection root.`)) deleteFolder(collection.id, folder.id);
+                            <button className="danger" title={t("Delete folder")} onClick={() => {
+                              if (window.confirm(t('Delete folder “{name}”? Its requests will move to the collection root.', { name: folder.name }))) deleteFolder(collection.id, folder.id);
                             }}><Trash2 size={11} /></button>
                           </div>
                         </div>
@@ -239,7 +241,7 @@ export function Sidebar() {
                       </div>
                     );
                   })}
-                  {!collection.requestIds.length && !collection.folders.length && <div className="tree-empty">Empty collection</div>}
+                  {!collection.requestIds.length && !collection.folders.length && <div className="tree-empty">{t("Empty collection")}</div>}
                 </div>
               )}
             </div>
@@ -248,14 +250,14 @@ export function Sidebar() {
 
         {unfiled.length > 0 && (
           <div className="collection-node unfiled-node">
-            <div className="tree-row collection-row"><span className="collection-drag-handle" /><span className="tree-toggle" /><div className="tree-label"><Folder size={13} /><span>Unfiled</span></div></div>
+            <div className="tree-row collection-row"><span className="collection-drag-handle" /><span className="tree-toggle" /><div className="tree-label"><Folder size={13} /><span>{t("Unfiled")}</span></div></div>
             <div className="tree-children">{unfiled.map((request) => requestRow(request.id))}</div>
           </div>
         )}
       </div>
 
       <div className="sidebar-footer">
-        <button className={`nav-item ${activeView === 'settings' ? 'active-static' : ''}`} onClick={() => setActiveView('settings')}><Settings2 size={15} /> Settings</button>
+        <button className={`nav-item ${activeView === 'settings' ? 'active-static' : ''}`} onClick={() => setActiveView('settings')}><Settings2 size={15} /> {t("Settings")}</button>
       </div>
     </aside>
   );

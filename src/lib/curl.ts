@@ -1,3 +1,4 @@
+import { translate as t } from '../i18n';
 import { createId } from './id';
 import { toEngineRequest } from './request';
 import type { ApiRequest, HttpMethod, KeyValue, MultipartField, NetworkSettings } from '../types/api';
@@ -107,7 +108,7 @@ function splitAssignment(raw: string) {
 export function curlToRequest(input: string): ApiRequest {
   const tokens = tokenize(input.replace(/\\\r?\n/g, ' ').replace(/^\s*>\s?/gm, ''));
   if (!tokens.length || tokens[0].toLowerCase() !== 'curl') {
-    throw new Error('cURL command must start with "curl".');
+    throw new Error(t("cURL command must start with \"curl\"."));
   }
 
   let method: HttpMethod = 'GET';
@@ -121,7 +122,7 @@ export function curlToRequest(input: string): ApiRequest {
 
   const nextValue = (index: number, flag: string) => {
     const value = tokens[index + 1];
-    if (value === undefined) throw new Error(`Missing value after ${flag}.`);
+    if (value === undefined) throw new Error(t('Missing value after {flag}.', { flag }));
     return value;
   };
 
@@ -171,7 +172,7 @@ export function curlToRequest(input: string): ApiRequest {
     }
   }
 
-  if (!url) throw new Error('No URL found in cURL command.');
+  if (!url) throw new Error(t("No URL found in cURL command."));
 
   const parsed = new URL(url);
   const params = Array.from(parsed.searchParams.entries()).map(([key, value]) => kv(key, value));
@@ -196,7 +197,7 @@ export function curlToRequest(input: string): ApiRequest {
 
   return {
     id: createId('req'),
-    name: `${method} ${parsed.hostname || 'Imported request'}`,
+    name: `${method} ${parsed.hostname || t("Imported request")}`,
     method,
     url: parsed.toString(),
     params,

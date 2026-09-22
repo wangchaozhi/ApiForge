@@ -1,3 +1,4 @@
+import { translate as t, useLocale, useLanguageStore } from './i18n';
 import { useEffect } from 'react';
 import { CookieManagerPanel } from './components/CookieManagerPanel';
 import { EnvironmentPanel } from './components/EnvironmentPanel';
@@ -11,6 +12,17 @@ import { loadHistory } from './lib/history';
 import { useAppStore } from './store/appStore';
 
 export default function App() {
+  const locale = useLocale();
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  useEffect(() => {
+    const refresh = useLanguageStore.getState().refreshSystemLanguage;
+    window.addEventListener('languagechange', refresh);
+    return () => window.removeEventListener('languagechange', refresh);
+  }, []);
   const activeView = useAppStore((state) => state.activeView);
   const activeRequestId = useAppStore((state) => state.activeRequestId);
   const history = useAppStore((state) => state.history);
@@ -28,9 +40,9 @@ export default function App() {
         <header className="topbar">
           <div className="environment-chip">
             <span className="environment-dot" />
-            ApiForge Desktop
+            {t("ApiForge Desktop")}
           </div>
-          <div className="topbar-hint">Variables support <code>{'{{name}}'}</code> syntax</div>
+          <div className="topbar-hint">{t('Variables support {syntax} syntax', { syntax: '{{name}}' })}</div>
         </header>
         {activeView === 'collections' && (
           <div className="request-workspace">
@@ -41,7 +53,7 @@ export default function App() {
                 <ResponsePanel />
               </div>
             ) : (
-              <div className="page-empty"><strong>No open request</strong><span>Open a request from a collection or create a new one.</span></div>
+              <div className="page-empty"><strong>{t("No open request")}</strong><span>{t("Open a request from a collection or create a new one.")}</span></div>
             )}
           </div>
         )}

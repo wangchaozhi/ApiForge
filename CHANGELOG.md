@@ -1,3 +1,11 @@
+## Unreleased
+
+- Add persisted English / Simplified Chinese language selection and system-language detection.
+- Fix Node type definitions, Monaco worker exports, Cookie Store ownership and missing desktop icons.
+- Pin Rust 1.98.1 and commit npm/Cargo lockfiles for reproducible CI.
+- Build Windows installers, macOS Intel/Apple Silicon DMGs, and Linux AppImage/deb/rpm on CI.
+- Publish complete tag releases with version validation and per-platform SHA-256 checksums.
+
 # Changelog
 
 ## 0.5.0

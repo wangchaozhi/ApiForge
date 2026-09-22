@@ -1,3 +1,4 @@
+import { translate as t, useLocale } from '../i18n';
 import { FileUp, Plus, Trash2 } from 'lucide-react';
 import { createId } from '../lib/id';
 import { isTauriRuntime } from '../lib/request';
@@ -13,6 +14,7 @@ function emptyRow(): MultipartField {
 }
 
 export function MultipartEditor({ rows, onChange }: Props) {
+  useLocale();
   const patch = (id: string, values: Partial<MultipartField>) => {
     onChange(rows.map((row) => (row.id === id ? { ...row, ...values } : row)));
   };
@@ -35,9 +37,9 @@ export function MultipartEditor({ rows, onChange }: Props) {
     <div className="kv-editor multipart-editor">
       <div className="kv-head multipart-head">
         <span />
-        <span>Type</span>
-        <span>Key</span>
-        <span>Value / File</span>
+        <span>{t("Type")}</span>
+        <span>{t("Key")}</span>
+        <span>{t("Value / File")}</span>
         <span />
       </div>
       {rows.map((row) => (
@@ -47,7 +49,7 @@ export function MultipartEditor({ rows, onChange }: Props) {
             type="checkbox"
             checked={row.enabled}
             onChange={(event) => patch(row.id, { enabled: event.target.checked })}
-            aria-label="Enable row"
+            aria-label={t("Enable row")}
           />
           <select
             value={row.kind}
@@ -57,31 +59,31 @@ export function MultipartEditor({ rows, onChange }: Props) {
               fileName: undefined,
             })}
           >
-            <option value="text">Text</option>
-            <option value="file">File</option>
+            <option value="text">{t("Text")}</option>
+            <option value="file">{t("File")}</option>
           </select>
-          <input value={row.key} onChange={(event) => patch(row.id, { key: event.target.value })} placeholder="Key" />
+          <input value={row.key} onChange={(event) => patch(row.id, { key: event.target.value })} placeholder={t("Key")} />
           {row.kind === 'text' ? (
-            <input value={row.value} onChange={(event) => patch(row.id, { value: event.target.value })} placeholder="Value" />
+            <input value={row.value} onChange={(event) => patch(row.id, { value: event.target.value })} placeholder={t("Value")} />
           ) : (
             <button
               className="file-picker-button"
               type="button"
               onClick={() => void chooseFile(row.id)}
               disabled={!isTauriRuntime()}
-              title={isTauriRuntime() ? row.value || 'Choose file' : 'File picking is available in the desktop app'}
+              title={isTauriRuntime() ? row.value || t("Choose file") : t("File picking is available in the desktop app")}
             >
               <FileUp size={13} />
-              <span>{row.fileName || (isTauriRuntime() ? 'Choose file…' : 'Desktop only')}</span>
+              <span>{row.fileName || (isTauriRuntime() ? t("Choose file…") : t("Desktop only"))}</span>
             </button>
           )}
-          <button className="icon-button ghost" onClick={() => remove(row.id)} aria-label="Delete row">
+          <button className="icon-button ghost" onClick={() => remove(row.id)} aria-label={t("Delete row")}>
             <Trash2 size={14} />
           </button>
         </div>
       ))}
       <button className="add-row" onClick={() => onChange([...rows, emptyRow()])}>
-        <Plus size={14} /> Add row
+        <Plus size={14} /> {t("Add row")}
       </button>
     </div>
   );
