@@ -12,6 +12,7 @@ const authTypes: Array<{ value: AuthConfig['type']; label: MessageKey }> = [
   { value: 'bearer', label: "Bearer Token" },
   { value: 'basic', label: "Basic Auth" },
   { value: 'apiKey', label: "API Key" },
+  { value: 'oauth2', label: "OAuth 2.0" },
 ];
 
 export function AuthEditor({ request, onChange }: Props) {
@@ -23,6 +24,17 @@ export function AuthEditor({ request, onChange }: Props) {
     if (type === 'bearer') onChange({ type: 'bearer', token: '' });
     if (type === 'basic') onChange({ type: 'basic', username: '', password: '' });
     if (type === 'apiKey') onChange({ type: 'apiKey', key: 'X-API-Key', value: '', addTo: 'header' });
+    if (type === 'oauth2') onChange({
+      type: 'oauth2',
+      flow: 'authorization-code',
+      authorizationUrl: '',
+      tokenUrl: '',
+      clientId: '',
+      clientSecret: '',
+      scopes: '',
+      usePkce: true,
+      accessToken: '',
+    });
   };
 
   return (
@@ -78,6 +90,50 @@ export function AuthEditor({ request, onChange }: Props) {
                 <option value="query">{t("Query Params")}</option>
               </select>
             </label>
+          </>
+        )}
+        {auth.type === 'oauth2' && (
+          <>
+            <label>
+              <span>{t('OAuth 2.0')}</span>
+              <select value={auth.flow} onChange={(event) => onChange({ ...auth, flow: event.target.value as 'authorization-code' | 'client-credentials' })}>
+                <option value="authorization-code">{t('Authorization Code')}</option>
+                <option value="client-credentials">{t('Client Credentials')}</option>
+              </select>
+            </label>
+            {auth.flow === 'authorization-code' && (
+              <label>
+                <span>{t('Authorization URL')}</span>
+                <input value={auth.authorizationUrl} onChange={(event) => onChange({ ...auth, authorizationUrl: event.target.value })} spellCheck={false} />
+              </label>
+            )}
+            <label>
+              <span>{t('Token URL')}</span>
+              <input value={auth.tokenUrl} onChange={(event) => onChange({ ...auth, tokenUrl: event.target.value })} spellCheck={false} />
+            </label>
+            <label>
+              <span>{t('Client ID')}</span>
+              <input value={auth.clientId} onChange={(event) => onChange({ ...auth, clientId: event.target.value })} spellCheck={false} />
+            </label>
+            <label>
+              <span>{t('Client Secret')}</span>
+              <input type="password" value={auth.clientSecret} onChange={(event) => onChange({ ...auth, clientSecret: event.target.value })} />
+            </label>
+            <label>
+              <span>{t('Scopes')}</span>
+              <input value={auth.scopes} onChange={(event) => onChange({ ...auth, scopes: event.target.value })} placeholder="read write" spellCheck={false} />
+            </label>
+            {auth.flow === 'authorization-code' && (
+              <label className="auth-inline-toggle">
+                <span>{t('Use PKCE')}</span>
+                <input type="checkbox" checked={auth.usePkce} onChange={(event) => onChange({ ...auth, usePkce: event.target.checked })} />
+              </label>
+            )}
+            <label>
+              <span>{t('Access Token')}</span>
+              <input type="password" value={auth.accessToken} onChange={(event) => onChange({ ...auth, accessToken: event.target.value })} />
+            </label>
+            <div className="inline-empty">{t('OAuth token acquisition will be added in the next runner/auth step.')}</div>
           </>
         )}
       </div>
