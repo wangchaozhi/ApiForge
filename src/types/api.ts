@@ -52,6 +52,8 @@ export type ApiRequest = {
   formFields: KeyValue[];
   multipartFields: MultipartField[];
   auth: AuthConfig;
+  preRequestScript?: string;
+  testScript?: string;
 };
 
 export type ApiFolder = {
