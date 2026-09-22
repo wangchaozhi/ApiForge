@@ -521,6 +521,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            let local_data_dir = app.path().app_local_data_dir()?;
+            fs::create_dir_all(&local_data_dir)?;
+            let stronghold_salt = local_data_dir.join("stronghold-salt.bin");
+            app.handle().plugin(
+                tauri_plugin_stronghold::Builder::with_argon2(&stronghold_salt).build(),
+            )?;
+
             let database = Database::open(app)?;
             app.manage(database);
             app.manage(HttpState::open(app)?);
