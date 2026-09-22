@@ -6,6 +6,7 @@ import { HistoryPanel } from './components/HistoryPanel';
 import { RequestPanel } from './components/RequestPanel';
 import { RequestTabs } from './components/RequestTabs';
 import { ResponsePanel } from './components/ResponsePanel';
+import { RunnerPanel } from './components/RunnerPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { Sidebar } from './components/Sidebar';
 import { loadHistory } from './lib/history';
@@ -59,6 +60,7 @@ export default function App() {
             )}
           </div>
         )}
+        {activeView === 'runner' && <RunnerPanel />}
         {activeView === 'history' && <HistoryPanel />}
         {activeView === 'environments' && <EnvironmentPanel />}
         {activeView === 'cookies' && <CookieManagerPanel />}
