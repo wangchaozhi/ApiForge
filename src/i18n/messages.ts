@@ -163,7 +163,14 @@ export const zhCN = {
   "Delete folder “{name}”? Its requests will move to the collection root.": "删除文件夹“{name}”？其中的请求将移到集合根目录。",
   "Close {name}": "关闭 {name}",
   "{name} Copy": "{name} 副本",
-  "Missing value after {flag}.": "{flag} 后缺少参数值。"
+  "Missing value after {flag}.": "{flag} 后缺少参数值。",
+  "Active environment": "当前环境",
+  "New environment": "新建环境",
+  "Rename environment": "重命名环境",
+  "Delete environment": "删除环境",
+  "Environment name": "环境名称",
+  "Secret": "敏感值",
+  "Secret values stay in memory for this session until the secure vault is connected.": "在安全保险库接入前，敏感值仅在当前会话内保存在内存中。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
