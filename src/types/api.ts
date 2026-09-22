@@ -18,7 +18,18 @@ export type AuthConfig =
   | { type: 'none' }
   | { type: 'bearer'; token: string }
   | { type: 'basic'; username: string; password: string }
-  | { type: 'apiKey'; key: string; value: string; addTo: 'header' | 'query' };
+  | { type: 'apiKey'; key: string; value: string; addTo: 'header' | 'query' }
+  | {
+      type: 'oauth2';
+      flow: 'authorization-code' | 'client-credentials';
+      authorizationUrl: string;
+      tokenUrl: string;
+      clientId: string;
+      clientSecret: string;
+      scopes: string;
+      usePkce: boolean;
+      accessToken: string;
+    };
 
 export type NetworkSettings = {
   timeoutMs: number;
