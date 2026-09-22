@@ -196,7 +196,22 @@ export const zhCN = {
   "Scopes": "权限范围",
   "Use PKCE": "使用 PKCE",
   "Access Token": "访问令牌",
-  "OAuth token acquisition will be added in the next runner/auth step.": "OAuth 自动获取令牌将在下一步运行器/认证开发中接入。"
+  "OAuth token acquisition will be added in the next runner/auth step.": "OAuth 自动获取令牌将在下一步运行器/认证开发中接入。",
+  "Runner": "运行器",
+  "Collection Runner": "集合运行器",
+  "Run collection requests sequentially with the active environment.": "使用当前环境按顺序执行集合中的请求。",
+  "Run collection": "运行集合",
+  "Stop runner": "停止运行",
+  "Clear results": "清空结果",
+  "Iterations": "迭代次数",
+  "Delay (ms)": "延迟（毫秒）",
+  "Stop on request error": "请求错误时停止",
+  "{count} requests per iteration": "每轮 {count} 个请求",
+  "Pre-request and test scripts are saved but not executed until the sandbox runtime is enabled.": "请求前脚本和测试脚本已保存，但在沙箱运行时启用前不会执行。",
+  "Iteration": "轮次",
+  "Request": "请求",
+  "No runner results yet": "暂无运行结果",
+  "Choose a collection and start a run.": "选择一个集合并开始运行。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
