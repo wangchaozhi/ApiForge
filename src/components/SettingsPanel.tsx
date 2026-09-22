@@ -3,6 +3,7 @@ import { Cookie, RotateCcw, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucid
 import { useState } from 'react';
 import { clearCookieJar } from '../lib/request';
 import { useAppStore } from '../store/appStore';
+import { WorkspaceTransferPanel } from './WorkspaceTransferPanel';
 
 export function SettingsPanel() {
   useLocale();
@@ -44,6 +45,8 @@ export function SettingsPanel() {
           </label>
           <p className="settings-description">{t('Choose the display language. Your workspace data stays unchanged.')}</p>
         </div>
+        <WorkspaceTransferPanel />
+
         <div className="settings-card">
           <div className="settings-card-title"><SlidersHorizontal size={16} /><div><strong>{t("Request behavior")}</strong><span>{t("Timeout and redirect policy")}</span></div></div>
           <label className="settings-field">
