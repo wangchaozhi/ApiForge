@@ -170,7 +170,18 @@ export const zhCN = {
   "Delete environment": "删除环境",
   "Environment name": "环境名称",
   "Secret": "敏感值",
-  "Secret values stay in memory for this session until the secure vault is connected.": "在安全保险库接入前，敏感值仅在当前会话内保存在内存中。"
+  "Secret values stay in memory for this session until the secure vault is connected.": "在安全保险库接入前，敏感值仅在当前会话内保存在内存中。",
+  "Data portability": "数据迁移",
+  "Backup ApiForge or exchange Postman collections and environments.": "备份 ApiForge，或与 Postman 交换集合和环境变量。",
+  "Import JSON": "导入 JSON",
+  "Export workspace": "导出工作区",
+  "Export collection": "导出集合",
+  "Export environment": "导出环境",
+  "Collection": "集合",
+  "Secrets are excluded from exports by default.": "默认导出时不会包含敏感值。",
+  "Import complete.": "导入完成。",
+  "Unsupported JSON file.": "不支持的 JSON 文件。",
+  "Import failed: {message}": "导入失败：{message}"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
