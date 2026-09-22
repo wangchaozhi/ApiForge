@@ -188,7 +188,7 @@ export function RequestPanel() {
             <section className="script-editor-card">
               <div className="script-editor-heading">
                 <strong>{t('Pre-request Script')}</strong>
-                <span>{t('Script execution will be enabled by Collection Runner.')}</span>
+                <span>{t('Scripts execute when this request runs in Collection Runner.')}</span>
               </div>
               <CodeEditor
                 value={request.preRequestScript ?? ''}
@@ -199,7 +199,7 @@ export function RequestPanel() {
             <section className="script-editor-card">
               <div className="script-editor-heading">
                 <strong>{t('Tests')}</strong>
-                <span>{t('Script execution will be enabled by Collection Runner.')}</span>
+                <span>{t('Scripts execute when this request runs in Collection Runner.')}</span>
               </div>
               <CodeEditor
                 value={request.testScript ?? ''}
