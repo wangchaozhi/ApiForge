@@ -15,7 +15,7 @@ import type { BodyType, HttpMethod } from '../types/api';
 
 const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 const bodyTypes: BodyType[] = ['none', 'json', 'raw', 'form-urlencoded', 'form-data'];
-type Tab = 'params' | 'headers' | 'auth' | 'body';
+type Tab = 'params' | 'headers' | 'auth' | 'body' | 'scripts';
 
 function bodyLabel(bodyType: BodyType) {
   if (bodyType === 'none') return t("None");
@@ -131,6 +131,7 @@ export function RequestPanel() {
         <button className={tab === 'headers' ? 'active' : ''} onClick={() => setTab('headers')}>{t("Headers")} <span>{counts.headers}</span></button>
         <button className={tab === 'auth' ? 'active' : ''} onClick={() => setTab('auth')}>{t("Authorization")}</button>
         <button className={tab === 'body' ? 'active' : ''} onClick={() => setTab('body')}>{t("Body")}</button>
+        <button className={tab === 'scripts' ? 'active' : ''} onClick={() => setTab('scripts')}>{t('Scripts')}</button>
       </div>
 
       <div className="tab-content">
@@ -180,6 +181,32 @@ export function RequestPanel() {
                 onChange={(multipartFields) => update((current) => ({ ...current, multipartFields }))}
               />
             )}
+          </div>
+        )}
+        {tab === 'scripts' && (
+          <div className="script-editors">
+            <section className="script-editor-card">
+              <div className="script-editor-heading">
+                <strong>{t('Pre-request Script')}</strong>
+                <span>{t('Script execution will be enabled by Collection Runner.')}</span>
+              </div>
+              <CodeEditor
+                value={request.preRequestScript ?? ''}
+                language="javascript"
+                onChange={(preRequestScript) => update((current) => ({ ...current, preRequestScript }))}
+              />
+            </section>
+            <section className="script-editor-card">
+              <div className="script-editor-heading">
+                <strong>{t('Tests')}</strong>
+                <span>{t('Script execution will be enabled by Collection Runner.')}</span>
+              </div>
+              <CodeEditor
+                value={request.testScript ?? ''}
+                language="javascript"
+                onChange={(testScript) => update((current) => ({ ...current, testScript }))}
+              />
+            </section>
           </div>
         )}
       </div>
