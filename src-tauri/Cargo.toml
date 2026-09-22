@@ -14,7 +14,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
-base64 = "0.22.1"
+base64 = "0.23.1"
 cookie_store = "0.22.1"
 reqwest = { version = "0.13.5", features = ["json", "form", "multipart", "stream", "cookies"] }
 reqwest_cookie_store = "0.10.0"
