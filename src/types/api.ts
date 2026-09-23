@@ -24,6 +24,7 @@ export type AuthConfig =
       flow: 'authorization-code' | 'client-credentials';
       authorizationUrl: string;
       tokenUrl: string;
+      redirectUri: string;
       clientId: string;
       clientSecret: string;
       scopes: string;
