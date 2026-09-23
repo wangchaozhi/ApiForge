@@ -230,7 +230,20 @@ export const zhCN = {
   "Lock secrets": "锁定敏感信息",
   "Unlock to edit": "解锁后编辑",
   "Unlock the secret vault before editing secrets.": "请先解锁敏感信息保险库再编辑敏感值。",
-  "Unlock the secret vault before deleting this environment.": "请先解锁敏感信息保险库再删除此环境。"
+  "Unlock the secret vault before deleting this environment.": "请先解锁敏感信息保险库再删除此环境。",
+
+  "Redirect URI": "重定向 URI",
+  "Generate authorization URL": "生成授权 URL",
+  "Copy authorization URL": "复制授权 URL",
+  "Generated authorization URL": "生成的授权 URL",
+  "Exchange code for token": "用授权码交换令牌",
+  "Get access token": "获取访问令牌",
+  "OAuth token endpoint did not return JSON.": "OAuth 令牌接口没有返回 JSON。",
+  "OAuth token response did not include access_token.": "OAuth 令牌响应中没有 access_token。",
+  "Access token acquired for this session.": "已为当前会话获取访问令牌。",
+  "Authorization URL generated. Open it in your browser, then paste the returned code below.": "授权 URL 已生成。请在浏览器中打开，然后把返回的授权码粘贴到下方。",
+  "Authorization code is required.": "需要填写授权码。",
+  "OAuth secrets and access tokens are session-only and excluded from workspace persistence.": "OAuth 密钥和访问令牌仅保留在当前会话中，不会写入工作区存储。",
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
