@@ -8,6 +8,7 @@ import type {
   ApiCollection,
   ApiRequest,
   ApiResponse,
+  AuthConfig,
   EnvironmentProfile,
   HistoryEntry,
   KeyValue,
@@ -92,10 +93,16 @@ function newRequest(name = t("Untitled Request")): ApiRequest {
   };
 }
 
+function normalizeAuth(auth: AuthConfig | undefined): AuthConfig {
+  if (!auth) return { type: 'none' };
+  if (auth.type === 'oauth2') return { ...auth, redirectUri: auth.redirectUri ?? '' };
+  return auth;
+}
+
 function normalizeRequest(request: ApiRequest): ApiRequest {
   return {
     ...request,
-    auth: request.auth ?? { type: 'none' },
+    auth: normalizeAuth(request.auth),
     formFields: request.formFields?.length ? request.formFields : [emptyRow()],
     multipartFields: request.multipartFields?.length ? request.multipartFields : [emptyMultipartRow()],
   };
