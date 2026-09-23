@@ -1,9 +1,10 @@
 import { Copy, KeyRound, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { translate as t, useLocale } from '../i18n';
 import type { MessageKey } from '../i18n/messages';
 import { createId } from '../lib/id';
 import { interpolate, sendApiRequest } from '../lib/request';
+import { isSecretVaultUnlocked, loadAuthSecrets, saveAuthSecrets } from '../lib/secrets';
 import { getActiveEnvironmentValues, useAppStore } from '../store/appStore';
 import type { ApiRequest, AuthConfig, EngineField } from '../types/api';
 
@@ -16,6 +17,7 @@ const authTypes: Array<{ value: AuthConfig['type']; label: MessageKey }> = [
   { value: 'none', label: 'No Auth' },
   { value: 'bearer', label: 'Bearer Token' },
   { value: 'basic', label: 'Basic Auth' },
+  { value: 'digest', label: 'Digest Auth' },
   { value: 'apiKey', label: 'API Key' },
   { value: 'oauth2', label: 'OAuth 2.0' },
 ];
@@ -39,7 +41,12 @@ async function sha256Base64Url(value: string) {
 
 export function AuthEditor({ request, onChange }: Props) {
   useLocale();
-  const variables = useAppStore(getActiveEnvironmentValues);
+  const environmentProfiles = useAppStore((state) => state.environmentProfiles);
+  const activeEnvironmentId = useAppStore((state) => state.activeEnvironmentId);
+  const variables = useMemo(
+    () => getActiveEnvironmentValues({ environmentProfiles, activeEnvironmentId }),
+    [environmentProfiles, activeEnvironmentId],
+  );
   const networkSettings = useAppStore((state) => state.networkSettings);
   const auth = request.auth ?? { type: 'none' as const };
 
@@ -48,6 +55,23 @@ export function AuthEditor({ request, onChange }: Props) {
   const [generatedAuthorizationUrl, setGeneratedAuthorizationUrl] = useState('');
   const [tokenBusy, setTokenBusy] = useState(false);
   const [tokenMessage, setTokenMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!isSecretVaultUnlocked()) return () => { active = false; };
+    void loadAuthSecrets(request.id, auth).then((loaded) => {
+      if (active && JSON.stringify(loaded) !== JSON.stringify(auth)) onChange(loaded);
+    });
+    return () => { active = false; };
+    // Secret hydration intentionally runs only when the request or auth scheme changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request.id, auth.type]);
+
+  const persistSecrets = (next: AuthConfig) => {
+    void saveAuthSecrets(request.id, next).catch((error) => {
+      setTokenMessage(error instanceof Error ? error.message : String(error));
+    });
+  };
 
   const setType = (type: AuthConfig['type']) => {
     setAuthorizationCode('');
@@ -58,6 +82,7 @@ export function AuthEditor({ request, onChange }: Props) {
     if (type === 'none') onChange({ type: 'none' });
     if (type === 'bearer') onChange({ type: 'bearer', token: '' });
     if (type === 'basic') onChange({ type: 'basic', username: '', password: '' });
+    if (type === 'digest') onChange({ type: 'digest', username: '', password: '' });
     if (type === 'apiKey') onChange({ type: 'apiKey', key: 'X-API-Key', value: '', addTo: 'header' });
     if (type === 'oauth2') onChange({
       type: 'oauth2',
@@ -70,6 +95,8 @@ export function AuthEditor({ request, onChange }: Props) {
       scopes: '',
       usePkce: true,
       accessToken: '',
+      refreshToken: '',
+      expiresAt: null,
     });
   };
 
@@ -110,13 +137,36 @@ export function AuthEditor({ request, onChange }: Props) {
       const accessToken = typeof payload.access_token === 'string' ? payload.access_token : '';
       if (!accessToken) throw new Error(t('OAuth token response did not include access_token.'));
 
-      onChange({ ...oauth, accessToken });
+      const refreshToken = typeof payload.refresh_token === 'string' ? payload.refresh_token : oauth.refreshToken;
+      const expiresIn = typeof payload.expires_in === 'number' ? payload.expires_in : Number(payload.expires_in);
+      const expiresAt = Number.isFinite(expiresIn) && expiresIn > 0
+        ? Date.now() + expiresIn * 1000
+        : null;
+      const updated = { ...oauth, accessToken, refreshToken, expiresAt };
+      onChange(updated);
+      persistSecrets(updated);
       setTokenMessage(t('Access token acquired for this session.'));
     } catch (error) {
       setTokenMessage(error instanceof Error ? error.message : String(error));
     } finally {
       setTokenBusy(false);
     }
+  };
+
+  const refreshAccessToken = async (oauth: Extract<AuthConfig, { type: 'oauth2' }>) => {
+    const refreshToken = interpolate(oauth.refreshToken, variables);
+    if (!refreshToken) {
+      setTokenMessage(t('Refresh token is required.'));
+      return;
+    }
+    const fields: EngineField[] = [
+      { key: 'grant_type', value: 'refresh_token' },
+      { key: 'refresh_token', value: refreshToken },
+      { key: 'client_id', value: interpolate(oauth.clientId, variables) },
+    ];
+    const clientSecret = interpolate(oauth.clientSecret, variables);
+    if (clientSecret) fields.push({ key: 'client_secret', value: clientSecret });
+    await exchangeToken(oauth, fields);
   };
 
   const acquireClientCredentials = async (oauth: Extract<AuthConfig, { type: 'oauth2' }>) => {
@@ -201,6 +251,7 @@ export function AuthEditor({ request, onChange }: Props) {
               value={auth.token}
               placeholder={t('{{token}} or paste a bearer token')}
               onChange={(event) => onChange({ ...auth, token: event.target.value })}
+              onBlur={() => persistSecrets(auth)}
             />
           </label>
         )}
@@ -212,7 +263,19 @@ export function AuthEditor({ request, onChange }: Props) {
             </label>
             <label>
               <span>{t('Password')}</span>
-              <input type="password" value={auth.password} onChange={(event) => onChange({ ...auth, password: event.target.value })} />
+              <input type="password" value={auth.password} onChange={(event) => onChange({ ...auth, password: event.target.value })} onBlur={() => persistSecrets(auth)} />
+            </label>
+          </>
+        )}
+        {auth.type === 'digest' && (
+          <>
+            <label>
+              <span>{t('Username')}</span>
+              <input value={auth.username} onChange={(event) => onChange({ ...auth, username: event.target.value })} />
+            </label>
+            <label>
+              <span>{t('Password')}</span>
+              <input type="password" value={auth.password} onChange={(event) => onChange({ ...auth, password: event.target.value })} onBlur={() => persistSecrets(auth)} />
             </label>
           </>
         )}
@@ -224,7 +287,7 @@ export function AuthEditor({ request, onChange }: Props) {
             </label>
             <label>
               <span>{t('Value')}</span>
-              <input type="password" value={auth.value} onChange={(event) => onChange({ ...auth, value: event.target.value })} />
+              <input type="password" value={auth.value} onChange={(event) => onChange({ ...auth, value: event.target.value })} onBlur={() => persistSecrets(auth)} />
             </label>
             <label>
               <span>{t('Add to')}</span>
@@ -274,7 +337,7 @@ export function AuthEditor({ request, onChange }: Props) {
             </label>
             <label>
               <span>{t('Client Secret')}</span>
-              <input type="password" value={auth.clientSecret} onChange={(event) => onChange({ ...auth, clientSecret: event.target.value })} />
+              <input type="password" value={auth.clientSecret} onChange={(event) => onChange({ ...auth, clientSecret: event.target.value })} onBlur={() => persistSecrets(auth)} />
             </label>
             <label>
               <span>{t('Scopes')}</span>
@@ -340,8 +403,21 @@ export function AuthEditor({ request, onChange }: Props) {
 
             <label>
               <span>{t('Access Token')}</span>
-              <input type="password" value={auth.accessToken} onChange={(event) => onChange({ ...auth, accessToken: event.target.value })} />
+              <input type="password" value={auth.accessToken} onChange={(event) => onChange({ ...auth, accessToken: event.target.value })} onBlur={() => persistSecrets(auth)} />
             </label>
+
+            <label>
+              <span>{t('Refresh Token')}</span>
+              <input type="password" value={auth.refreshToken} onChange={(event) => onChange({ ...auth, refreshToken: event.target.value })} onBlur={() => persistSecrets(auth)} />
+            </label>
+
+            <button
+              className="secondary-button compact oauth-token-button"
+              disabled={!auth.tokenUrl || !auth.clientId || !auth.refreshToken || tokenBusy}
+              onClick={() => void refreshAccessToken(auth)}
+            >
+              <RefreshCw size={13} className={tokenBusy ? 'spin' : ''} /> {t('Refresh access token')}
+            </button>
 
             <div className="inline-empty">
               {tokenMessage ?? t('OAuth secrets and access tokens are session-only and excluded from workspace persistence.')}

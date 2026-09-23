@@ -8,7 +8,7 @@ import { KeyValueEditor } from './KeyValueEditor';
 import { MultipartEditor } from './MultipartEditor';
 import { curlToRequest, requestToCurl } from '../lib/curl';
 import { makeHistoryEntry, saveHistory } from '../lib/history';
-import { cancelApiRequest, sendApiRequest, toEngineRequest } from '../lib/request';
+import { cancelApiRequest, refreshOAuthAccessToken, sendApiRequest, toEngineRequest } from '../lib/request';
 import { createId } from '../lib/id';
 import { getActiveEnvironmentValues, useAppStore } from '../store/appStore';
 import type { BodyType, HttpMethod } from '../types/api';
@@ -62,10 +62,18 @@ export function RequestPanel() {
     const nextOperationId = createId('op');
     startRequest(requestId, nextOperationId);
     try {
-      const engineRequest = toEngineRequest(request, variables, networkSettings);
+      let requestToSend = request;
+      if (request.auth.type === 'oauth2') {
+        const auth = await refreshOAuthAccessToken(request.auth, variables, networkSettings);
+        if (auth !== request.auth) {
+          requestToSend = { ...request, auth };
+          update(() => requestToSend);
+        }
+      }
+      const engineRequest = toEngineRequest(requestToSend, variables, networkSettings);
       const response = await sendApiRequest(engineRequest, nextOperationId);
       completeRequest(requestId, response);
-      const historyEntry = makeHistoryEntry(request, engineRequest, response);
+      const historyEntry = makeHistoryEntry(requestToSend, engineRequest, response);
       prependHistory(historyEntry);
       void saveHistory(historyEntry).catch(() => undefined);
     } catch (error) {

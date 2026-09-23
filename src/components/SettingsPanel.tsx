@@ -1,7 +1,8 @@
 import { translate as t, useLocale, useLanguageStore } from '../i18n';
 import { Cookie, RotateCcw, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { clearCookieJar, isTauriRuntime } from '../lib/request';
+import { isSecretVaultUnlocked, loadNetworkSecrets, saveNetworkSecret } from '../lib/secrets';
 import { useAppStore } from '../store/appStore';
 import { WorkspaceTransferPanel } from './WorkspaceTransferPanel';
 
@@ -13,6 +14,11 @@ export function SettingsPanel() {
   const update = useAppStore((state) => state.updateNetworkSettings);
   const reset = useAppStore((state) => state.resetNetworkSettings);
   const [cookieMessage, setCookieMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isSecretVaultUnlocked()) return;
+    void loadNetworkSecrets().then(update);
+  }, [update]);
 
   const clearCookies = async () => {
     try {
@@ -111,6 +117,7 @@ export function SettingsPanel() {
                 type="password"
                 value={settings.proxyPassword}
                 onChange={(event) => update({ proxyPassword: event.target.value })}
+                onBlur={() => void saveNetworkSecret('proxyPassword', settings.proxyPassword)}
                 autoComplete="off"
               />
             </label>
@@ -183,6 +190,7 @@ export function SettingsPanel() {
                     type="password"
                     value={settings.clientCertificatePassword}
                     onChange={(event) => update({ clientCertificatePassword: event.target.value })}
+                    onBlur={() => void saveNetworkSecret('clientCertificatePassword', settings.clientCertificatePassword)}
                     autoComplete="off"
                   />
                 </label>

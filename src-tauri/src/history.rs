@@ -1,6 +1,6 @@
 use std::{fs, sync::Mutex};
 
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use tauri::{Manager, State};
 
@@ -167,7 +167,7 @@ pub(crate) fn clear_history(database: State<'_, Database>) -> Result<(), AppErro
 
 #[cfg(test)]
 mod tests {
-    use super::{list_history_inner, save_history_inner, Database, HistoryEntry};
+    use super::{Database, HistoryEntry, list_history_inner, save_history_inner};
 
     fn entry(index: usize) -> HistoryEntry {
         HistoryEntry {
@@ -182,7 +182,12 @@ mod tests {
             size_bytes: index,
             request_json: "{}".into(),
             response_json: "{}".into(),
-            created_at: format!("2026-09-22T16:{:02}:{:02}.{:03}Z", (index / 60) % 60, index % 60, index),
+            created_at: format!(
+                "2026-09-22T16:{:02}:{:02}.{:03}Z",
+                (index / 60) % 60,
+                index % 60,
+                index
+            ),
         }
     }
 
@@ -209,7 +214,17 @@ mod tests {
             save_history_inner(&connection, &entry(index)).expect("save history");
         }
 
-        assert_eq!(list_history_inner(&connection, 0).expect("minimum limit").len(), 1);
-        assert_eq!(list_history_inner(&connection, 999).expect("maximum limit").len(), 3);
+        assert_eq!(
+            list_history_inner(&connection, 0)
+                .expect("minimum limit")
+                .len(),
+            1
+        );
+        assert_eq!(
+            list_history_inner(&connection, 999)
+                .expect("maximum limit")
+                .len(),
+            3
+        );
     }
 }

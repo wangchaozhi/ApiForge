@@ -139,6 +139,8 @@ function postmanAuth(auth: JsonRecord | undefined): AuthConfig {
       scopes: read('oauth2', 'scope'),
       usePkce: read('oauth2', 'challengeAlgorithm') !== '',
       accessToken: read('oauth2', 'accessToken'),
+      refreshToken: '',
+      expiresAt: null,
     };
   }
   return { type: 'none' };

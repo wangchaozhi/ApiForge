@@ -101,7 +101,12 @@ function newRequest(name = t("Untitled Request")): ApiRequest {
 
 function normalizeAuth(auth: AuthConfig | undefined): AuthConfig {
   if (!auth) return { type: 'none' };
-  if (auth.type === 'oauth2') return { ...auth, redirectUri: auth.redirectUri ?? '' };
+  if (auth.type === 'oauth2') return {
+    ...auth,
+    redirectUri: auth.redirectUri ?? '',
+    refreshToken: auth.refreshToken ?? '',
+    expiresAt: auth.expiresAt ?? null,
+  };
   return auth;
 }
 

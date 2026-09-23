@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from 'react';
 import { translate as t, useLocale } from '../i18n';
 import { makeHistoryEntry, saveHistory } from '../lib/history';
 import { createId } from '../lib/id';
-import { cancelApiRequest, sendApiRequest, toEngineRequest } from '../lib/request';
+import { cancelApiRequest, refreshOAuthAccessToken, sendApiRequest, toEngineRequest } from '../lib/request';
 import {
   applyEnvironmentMutations,
   applyHeaderMutations,
@@ -31,11 +31,12 @@ export function RunnerPanel() {
   useLocale();
   const collections = useAppStore((state) => state.collections);
   const requests = useAppStore((state) => state.requests);
-  const variables = useAppStore(getActiveEnvironmentValues);
+  const environmentProfiles = useAppStore((state) => state.environmentProfiles);
   const networkSettings = useAppStore((state) => state.networkSettings);
   const prependHistory = useAppStore((state) => state.prependHistory);
 
   const [collectionId, setCollectionId] = useState(collections[0]?.id ?? '');
+  const [environmentId, setEnvironmentId] = useState(() => useAppStore.getState().activeEnvironmentId);
   const [iterations, setIterations] = useState(1);
   const [delayMs, setDelayMs] = useState(0);
   const [stopOnError, setStopOnError] = useState(true);
@@ -69,7 +70,7 @@ export function RunnerPanel() {
     cancelledRef.current = false;
     setRunning(true);
     setResults([]);
-    const runVariables = { ...variables };
+    const runVariables = { ...getActiveEnvironmentValues({ environmentProfiles, activeEnvironmentId: environmentId }) };
 
     try {
       outer:
@@ -94,7 +95,10 @@ export function RunnerPanel() {
             scriptTests = [...scriptTests, ...preScript.tests];
             scriptLogs = [...scriptLogs, ...preScript.logs];
 
-            const engineRequest = toEngineRequest(request, runVariables, networkSettings);
+            const requestToSend = request.auth.type === 'oauth2'
+              ? { ...request, auth: await refreshOAuthAccessToken(request.auth, runVariables, networkSettings) }
+              : request;
+            const engineRequest = toEngineRequest(requestToSend, runVariables, networkSettings);
             applyHeaderMutations(engineRequest.headers, preScript.headers);
 
             const operationId = createId('runner-op');
@@ -179,6 +183,12 @@ export function RunnerPanel() {
           <span>{t('Collection')}</span>
           <select value={collection?.id ?? ''} disabled={running} onChange={(event) => setCollectionId(event.target.value)}>
             {collections.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>{t('Environment')}</span>
+          <select value={environmentId} disabled={running} onChange={(event) => setEnvironmentId(event.target.value)}>
+            {environmentProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
           </select>
         </label>
         <label>

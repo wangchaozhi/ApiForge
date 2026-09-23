@@ -18,6 +18,7 @@ export type AuthConfig =
   | { type: 'none' }
   | { type: 'bearer'; token: string }
   | { type: 'basic'; username: string; password: string }
+  | { type: 'digest'; username: string; password: string }
   | { type: 'apiKey'; key: string; value: string; addTo: 'header' | 'query' }
   | {
       type: 'oauth2';
@@ -30,6 +31,8 @@ export type AuthConfig =
       scopes: string;
       usePkce: boolean;
       accessToken: string;
+      refreshToken: string;
+      expiresAt: number | null;
     };
 
 export type NetworkSettings = {
@@ -102,6 +105,7 @@ export type EngineRequest = {
   headers: Record<string, string>;
   body: EngineBody;
   network: NetworkSettings;
+  digestAuth?: { username: string; password: string };
 };
 
 export type ApiResponse = {

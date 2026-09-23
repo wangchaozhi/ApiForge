@@ -76,7 +76,8 @@ pub(crate) struct ScriptResult {
 }
 
 fn script_prelude(input: &ScriptExecution) -> Result<String, String> {
-    let environment = serde_json::to_string(&input.environment).map_err(|error| error.to_string())?;
+    let environment =
+        serde_json::to_string(&input.environment).map_err(|error| error.to_string())?;
     let request = serde_json::to_string(&input.request).map_err(|error| error.to_string())?;
     let response = serde_json::to_string(&input.response).map_err(|error| error.to_string())?;
     let phase = serde_json::to_string(&input.phase).map_err(|error| error.to_string())?;
@@ -257,7 +258,7 @@ pub(crate) fn run_script(input: ScriptExecution) -> Result<ScriptResult, String>
 
 #[cfg(test)]
 mod tests {
-    use super::{execute_script, ScriptExecution, ScriptRequestSnapshot, ScriptResponseSnapshot};
+    use super::{ScriptExecution, ScriptRequestSnapshot, ScriptResponseSnapshot, execute_script};
     use std::collections::HashMap;
 
     fn execution(script: &str, with_response: bool) -> ScriptExecution {
@@ -321,13 +322,15 @@ af.test("failure is captured", () => af.expect(1).toBe(2));
 
     #[test]
     fn dynamic_code_compilation_is_disabled() {
-        let error = execute_script(execution(r#"eval("1 + 1")"#, false)).expect_err("eval must fail");
+        let error =
+            execute_script(execution(r#"eval("1 + 1")"#, false)).expect_err("eval must fail");
         assert!(error.contains("Dynamic code compilation is disabled"));
     }
 
     #[test]
     fn runaway_loop_hits_runtime_limit() {
-        let error = execute_script(execution("while (true) {}", false)).expect_err("loop must fail");
+        let error =
+            execute_script(execution("while (true) {}", false)).expect_err("loop must fail");
         assert!(error.contains("runtime") || error.contains("Runtime") || error.contains("limit"));
     }
 }
