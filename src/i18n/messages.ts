@@ -244,6 +244,16 @@ export const zhCN = {
   "Authorization URL generated. Open it in your browser, then paste the returned code below.": "授权 URL 已生成。请在浏览器中打开，然后把返回的授权码粘贴到下方。",
   "Authorization code is required.": "需要填写授权码。",
   "OAuth secrets and access tokens are session-only and excluded from workspace persistence.": "OAuth 密钥和访问令牌仅保留在当前会话中，不会写入工作区存储。",
+
+  "Proxy username": "代理用户名",
+  "Proxy password": "代理密码",
+  "Proxy passwords are session-only and are not saved to workspace storage.": "代理密码仅保留在当前会话中，不会写入工作区存储。",
+  "Client certificate": "客户端证书",
+  "Certificate bundle": "证书包",
+  "Certificate PEM": "证书 PEM",
+  "PKCS#8 private key": "PKCS#8 私钥",
+  "Certificate password": "证书密码",
+  "Certificate passwords are session-only and are not saved to workspace storage.": "证书密码仅保留在当前会话中，不会写入工作区存储。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
