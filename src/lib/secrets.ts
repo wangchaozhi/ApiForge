@@ -1,6 +1,6 @@
 import { appLocalDataDir, join } from '@tauri-apps/api/path';
 import { Stronghold, type Store } from '@tauri-apps/plugin-stronghold';
-import type { EnvironmentProfile } from '../types/api';
+import type { AuthConfig, EnvironmentProfile, NetworkSettings } from '../types/api';
 
 const CLIENT_NAME = 'apiforge-secrets';
 const SNAPSHOT_NAME = 'secrets.hold';
@@ -25,6 +25,61 @@ export function isSecretVaultUnlocked() {
 
 export function environmentSecretKey(profileId: string, variableKey: string) {
   return `environment:${encodeURIComponent(profileId)}:${encodeURIComponent(variableKey)}`;
+}
+
+type AuthSecretField = 'token' | 'password' | 'value' | 'clientSecret' | 'accessToken' | 'refreshToken';
+type NetworkSecretField = 'proxyPassword' | 'clientCertificatePassword';
+
+function requestSecretKey(requestId: string, field: AuthSecretField) {
+  return `request:${encodeURIComponent(requestId)}:${field}`;
+}
+
+function networkSecretKey(field: NetworkSecretField) {
+  return `network:${field}`;
+}
+
+async function replaceSecret(key: string, value: string) {
+  if (value) await writeSecret(key, value);
+  else await deleteSecret(key);
+}
+
+export async function saveAuthSecrets(requestId: string, auth: AuthConfig) {
+  if (!isSecretVaultUnlocked()) return;
+  if (auth.type === 'bearer') await replaceSecret(requestSecretKey(requestId, 'token'), auth.token);
+  if (auth.type === 'basic' || auth.type === 'digest') await replaceSecret(requestSecretKey(requestId, 'password'), auth.password);
+  if (auth.type === 'apiKey') await replaceSecret(requestSecretKey(requestId, 'value'), auth.value);
+  if (auth.type === 'oauth2') {
+    await replaceSecret(requestSecretKey(requestId, 'clientSecret'), auth.clientSecret);
+    await replaceSecret(requestSecretKey(requestId, 'accessToken'), auth.accessToken);
+    await replaceSecret(requestSecretKey(requestId, 'refreshToken'), auth.refreshToken);
+  }
+}
+
+export async function loadAuthSecrets(requestId: string, auth: AuthConfig): Promise<AuthConfig> {
+  if (!isSecretVaultUnlocked()) return auth;
+  if (auth.type === 'bearer') return { ...auth, token: (await readSecret(requestSecretKey(requestId, 'token'))) ?? '' };
+  if (auth.type === 'basic' || auth.type === 'digest') return { ...auth, password: (await readSecret(requestSecretKey(requestId, 'password'))) ?? '' };
+  if (auth.type === 'apiKey') return { ...auth, value: (await readSecret(requestSecretKey(requestId, 'value'))) ?? '' };
+  if (auth.type === 'oauth2') return {
+    ...auth,
+    clientSecret: (await readSecret(requestSecretKey(requestId, 'clientSecret'))) ?? '',
+    accessToken: (await readSecret(requestSecretKey(requestId, 'accessToken'))) ?? '',
+    refreshToken: (await readSecret(requestSecretKey(requestId, 'refreshToken'))) ?? '',
+  };
+  return auth;
+}
+
+export async function saveNetworkSecret(field: NetworkSecretField, value: string) {
+  if (!isSecretVaultUnlocked()) return;
+  await replaceSecret(networkSecretKey(field), value);
+}
+
+export async function loadNetworkSecrets(): Promise<Partial<NetworkSettings>> {
+  if (!isSecretVaultUnlocked()) return {};
+  return {
+    proxyPassword: (await readSecret(networkSecretKey('proxyPassword'))) ?? '',
+    clientCertificatePassword: (await readSecret(networkSecretKey('clientCertificatePassword'))) ?? '',
+  };
 }
 
 export async function unlockSecretVault(password: string) {

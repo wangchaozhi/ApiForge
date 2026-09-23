@@ -1,7 +1,8 @@
 import { translate as t, useLocale, useLanguageStore } from '../i18n';
 import { Cookie, RotateCcw, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import { clearCookieJar } from '../lib/request';
+import { useEffect, useState } from 'react';
+import { clearCookieJar, isTauriRuntime } from '../lib/request';
+import { isSecretVaultUnlocked, loadNetworkSecrets, saveNetworkSecret } from '../lib/secrets';
 import { useAppStore } from '../store/appStore';
 import { WorkspaceTransferPanel } from './WorkspaceTransferPanel';
 
@@ -14,6 +15,11 @@ export function SettingsPanel() {
   const reset = useAppStore((state) => state.resetNetworkSettings);
   const [cookieMessage, setCookieMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!isSecretVaultUnlocked()) return;
+    void loadNetworkSecrets().then(update);
+  }, [update]);
+
   const clearCookies = async () => {
     try {
       await clearCookieJar();
@@ -21,6 +27,18 @@ export function SettingsPanel() {
     } catch (error) {
       setCookieMessage(error instanceof Error ? error.message : String(error));
     }
+  };
+
+  const chooseCertificateFile = async (target: 'certificate' | 'key') => {
+    if (!isTauriRuntime()) return;
+    const { open } = await import('@tauri-apps/plugin-dialog');
+    const filters = target === 'certificate'
+      ? [{ name: 'Certificates', extensions: settings.clientCertificateType === 'pkcs12' ? ['p12', 'pfx'] : ['pem', 'crt', 'cer'] }]
+      : [{ name: 'Private keys', extensions: ['pem', 'key'] }];
+    const selected = await open({ multiple: false, directory: false, filters });
+    if (typeof selected !== 'string') return;
+    if (target === 'certificate') update({ clientCertificatePath: selected });
+    else update({ clientKeyPath: selected });
   };
 
   return (
@@ -84,6 +102,102 @@ export function SettingsPanel() {
               spellCheck={false}
             />
           </label>
+          <div className="settings-grid-two">
+            <label className="settings-field">
+              <span>{t('Proxy username')}</span>
+              <input
+                value={settings.proxyUsername}
+                onChange={(event) => update({ proxyUsername: event.target.value })}
+                autoComplete="off"
+              />
+            </label>
+            <label className="settings-field">
+              <span>{t('Proxy password')}</span>
+              <input
+                type="password"
+                value={settings.proxyPassword}
+                onChange={(event) => update({ proxyPassword: event.target.value })}
+                onBlur={() => void saveNetworkSecret('proxyPassword', settings.proxyPassword)}
+                autoComplete="off"
+              />
+            </label>
+          </div>
+          <p className="settings-description">{t('Proxy passwords are session-only and are not saved to workspace storage.')}</p>
+
+          <label className="settings-field">
+            <span>{t('Client certificate')}</span>
+            <select
+              value={settings.clientCertificateType}
+              onChange={(event) => update({
+                clientCertificateType: event.target.value as 'none' | 'pkcs12' | 'pem',
+                clientCertificatePath: '',
+                clientKeyPath: '',
+                clientCertificatePassword: '',
+              })}
+            >
+              <option value="none">{t('None')}</option>
+              <option value="pkcs12">PKCS#12 / P12 / PFX</option>
+              <option value="pem">PEM + PKCS#8 key</option>
+            </select>
+          </label>
+
+          {settings.clientCertificateType !== 'none' && (
+            <>
+              <div className="settings-file-row">
+                <label className="settings-field">
+                  <span>{settings.clientCertificateType === 'pkcs12' ? t('Certificate bundle') : t('Certificate PEM')}</span>
+                  <input
+                    value={settings.clientCertificatePath}
+                    onChange={(event) => update({ clientCertificatePath: event.target.value })}
+                    placeholder={settings.clientCertificateType === 'pkcs12' ? '/path/client.p12' : '/path/client.pem'}
+                    spellCheck={false}
+                  />
+                </label>
+                <button
+                  className="secondary-button compact"
+                  disabled={!isTauriRuntime()}
+                  onClick={() => void chooseCertificateFile('certificate')}
+                >
+                  {t('Choose file')}
+                </button>
+              </div>
+
+              {settings.clientCertificateType === 'pem' && (
+                <div className="settings-file-row">
+                  <label className="settings-field">
+                    <span>{t('PKCS#8 private key')}</span>
+                    <input
+                      value={settings.clientKeyPath}
+                      onChange={(event) => update({ clientKeyPath: event.target.value })}
+                      placeholder="/path/key.pem"
+                      spellCheck={false}
+                    />
+                  </label>
+                  <button
+                    className="secondary-button compact"
+                    disabled={!isTauriRuntime()}
+                    onClick={() => void chooseCertificateFile('key')}
+                  >
+                    {t('Choose file')}
+                  </button>
+                </div>
+              )}
+
+              {settings.clientCertificateType === 'pkcs12' && (
+                <label className="settings-field">
+                  <span>{t('Certificate password')}</span>
+                  <input
+                    type="password"
+                    value={settings.clientCertificatePassword}
+                    onChange={(event) => update({ clientCertificatePassword: event.target.value })}
+                    onBlur={() => void saveNetworkSecret('clientCertificatePassword', settings.clientCertificatePassword)}
+                    autoComplete="off"
+                  />
+                </label>
+              )}
+              <p className="settings-description">{t('Certificate passwords are session-only and are not saved to workspace storage.')}</p>
+            </>
+          )}
         </div>
 
         <div className="settings-card">

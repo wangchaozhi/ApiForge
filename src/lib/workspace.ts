@@ -1,3 +1,4 @@
+import { redactAuthSecrets } from './auth';
 import { createId } from './id';
 import type {
   ApiCollection,
@@ -81,7 +82,18 @@ export function serializeWorkspace(data: WorkspaceData, includeSecrets = false) 
     exportedAt: new Date().toISOString(),
     data: {
       ...data,
+      requests: data.requests.map((request) => ({
+        ...request,
+        auth: includeSecrets ? request.auth : redactAuthSecrets(request.auth),
+      })),
       environmentProfiles: sanitizeProfiles(data.environmentProfiles, includeSecrets),
+      networkSettings: includeSecrets
+        ? data.networkSettings
+        : {
+            ...data.networkSettings,
+            proxyPassword: '',
+            clientCertificatePassword: '',
+          },
     },
   };
   return JSON.stringify(snapshot, null, 2);
@@ -113,6 +125,22 @@ function postmanAuth(auth: JsonRecord | undefined): AuthConfig {
       key: read('apikey', 'key') || 'X-API-Key',
       value: read('apikey', 'value'),
       addTo: read('apikey', 'in') === 'query' ? 'query' : 'header',
+    };
+  }
+  if (auth.type === 'oauth2') {
+    return {
+      type: 'oauth2',
+      flow: read('oauth2', 'grant_type') === 'client_credentials' ? 'client-credentials' : 'authorization-code',
+      authorizationUrl: read('oauth2', 'authUrl'),
+      tokenUrl: read('oauth2', 'accessTokenUrl'),
+      redirectUri: read('oauth2', 'redirect_uri') || read('oauth2', 'callbackUrl'),
+      clientId: read('oauth2', 'clientId'),
+      clientSecret: read('oauth2', 'clientSecret'),
+      scopes: read('oauth2', 'scope'),
+      usePkce: read('oauth2', 'challengeAlgorithm') !== '',
+      accessToken: read('oauth2', 'accessToken'),
+      refreshToken: '',
+      expiresAt: null,
     };
   }
   return { type: 'none' };
@@ -179,6 +207,13 @@ function postmanBody(body: JsonRecord | undefined): Pick<ApiRequest, 'bodyType' 
   return base;
 }
 
+function postmanEventScript(item: JsonRecord, listen: 'prerequest' | 'test') {
+  const event = Array.isArray(item.event) ? item.event.find((candidate: JsonRecord) => candidate?.listen === listen) : undefined;
+  const exec = event?.script?.exec;
+  if (Array.isArray(exec)) return exec.join('\n');
+  return typeof exec === 'string' ? exec : '';
+}
+
 function importPostmanRequest(item: JsonRecord) {
   const source = item.request ?? {};
   const request = emptyRequest(String(item.name ?? 'Imported request'));
@@ -190,6 +225,8 @@ function importPostmanRequest(item: JsonRecord) {
     params: postmanQuery(source),
     headers: postmanHeaders(source),
     auth: postmanAuth(source.auth),
+    preRequestScript: postmanEventScript(item, 'prerequest'),
+    testScript: postmanEventScript(item, 'test'),
     ...body,
   };
 }
@@ -273,6 +310,22 @@ function authToPostman(auth: AuthConfig) {
       ],
     };
   }
+  if (auth.type === 'oauth2') {
+    return {
+      type: 'oauth2',
+      oauth2: [
+        { key: 'grant_type', value: auth.flow === 'client-credentials' ? 'client_credentials' : 'authorization_code', type: 'string' },
+        { key: 'authUrl', value: auth.authorizationUrl, type: 'string' },
+        { key: 'accessTokenUrl', value: auth.tokenUrl, type: 'string' },
+        { key: 'redirect_uri', value: auth.redirectUri, type: 'string' },
+        { key: 'clientId', value: auth.clientId, type: 'string' },
+        { key: 'clientSecret', value: auth.clientSecret, type: 'string' },
+        { key: 'scope', value: auth.scopes, type: 'string' },
+        { key: 'challengeAlgorithm', value: auth.usePkce ? 'S256' : '', type: 'string' },
+        { key: 'accessToken', value: auth.accessToken, type: 'string' },
+      ],
+    };
+  }
   return undefined;
 }
 
@@ -307,8 +360,18 @@ function bodyToPostman(request: ApiRequest) {
 }
 
 function requestToPostman(request: ApiRequest) {
+  const event = [
+    request.preRequestScript
+      ? { listen: 'prerequest', script: { type: 'text/javascript', exec: request.preRequestScript.split('\n') } }
+      : null,
+    request.testScript
+      ? { listen: 'test', script: { type: 'text/javascript', exec: request.testScript.split('\n') } }
+      : null,
+  ].filter(Boolean);
+
   return {
     name: request.name,
+    ...(event.length ? { event } : {}),
     request: {
       method: request.method,
       header: request.headers.filter((item) => item.key).map((item) => ({
@@ -331,8 +394,8 @@ function requestToPostman(request: ApiRequest) {
   };
 }
 
-export function serializePostmanCollection(collection: ApiCollection, requests: ApiRequest[]) {
-  const byId = new Map(requests.map((request) => [request.id, request]));
+export function serializePostmanCollection(collection: ApiCollection, requests: ApiRequest[], includeSecrets = false) {
+  const byId = new Map(requests.map((request) => [request.id, includeSecrets ? request : { ...request, auth: redactAuthSecrets(request.auth) }]));
   const rootItems = collection.requestIds.flatMap((id) => {
     const request = byId.get(id);
     return request ? [requestToPostman(request)] : [];

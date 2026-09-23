@@ -1,12 +1,14 @@
 import { translate as t } from '../i18n';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { redactAuthSecrets } from '../lib/auth';
 import { createId } from '../lib/id';
 import type { WorkspaceData } from '../lib/workspace';
 import type {
   ApiCollection,
   ApiRequest,
   ApiResponse,
+  AuthConfig,
   EnvironmentProfile,
   HistoryEntry,
   KeyValue,
@@ -32,6 +34,12 @@ export const defaultNetworkSettings: NetworkSettings = {
   cookiesEnabled: true,
   useSystemProxy: true,
   proxyUrl: '',
+  proxyUsername: '',
+  proxyPassword: '',
+  clientCertificateType: 'none',
+  clientCertificatePath: '',
+  clientKeyPath: '',
+  clientCertificatePassword: '',
 };
 
 const starterRequest: ApiRequest = {
@@ -91,10 +99,21 @@ function newRequest(name = t("Untitled Request")): ApiRequest {
   };
 }
 
+function normalizeAuth(auth: AuthConfig | undefined): AuthConfig {
+  if (!auth) return { type: 'none' };
+  if (auth.type === 'oauth2') return {
+    ...auth,
+    redirectUri: auth.redirectUri ?? '',
+    refreshToken: auth.refreshToken ?? '',
+    expiresAt: auth.expiresAt ?? null,
+  };
+  return auth;
+}
+
 function normalizeRequest(request: ApiRequest): ApiRequest {
   return {
     ...request,
-    auth: request.auth ?? { type: 'none' },
+    auth: normalizeAuth(request.auth),
     formFields: request.formFields?.length ? request.formFields : [emptyRow()],
     multipartFields: request.multipartFields?.length ? request.multipartFields : [emptyMultipartRow()],
   };
@@ -545,7 +564,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'apiforge-workspace-v2',
       partialize: (state) => ({
-        requests: state.requests,
+        requests: state.requests.map((request) => ({ ...request, auth: redactAuthSecrets(request.auth) })),
         collections: state.collections,
         openRequestIds: state.openRequestIds,
         activeRequestId: state.activeRequestId,
@@ -557,7 +576,11 @@ export const useAppStore = create<AppState>()(
           ])),
         })),
         activeEnvironmentId: state.activeEnvironmentId,
-        networkSettings: state.networkSettings,
+        networkSettings: {
+          ...state.networkSettings,
+          proxyPassword: '',
+          clientCertificatePassword: '',
+        },
       }),
       merge: (persisted, current) => {
         const saved = persisted as Partial<AppState>;
