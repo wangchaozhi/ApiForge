@@ -34,6 +34,12 @@ export const defaultNetworkSettings: NetworkSettings = {
   cookiesEnabled: true,
   useSystemProxy: true,
   proxyUrl: '',
+  proxyUsername: '',
+  proxyPassword: '',
+  clientCertificateType: 'none',
+  clientCertificatePath: '',
+  clientKeyPath: '',
+  clientCertificatePassword: '',
 };
 
 const starterRequest: ApiRequest = {
@@ -565,7 +571,11 @@ export const useAppStore = create<AppState>()(
           ])),
         })),
         activeEnvironmentId: state.activeEnvironmentId,
-        networkSettings: state.networkSettings,
+        networkSettings: {
+          ...state.networkSettings,
+          proxyPassword: '',
+          clientCertificatePassword: '',
+        },
       }),
       merge: (persisted, current) => {
         const saved = persisted as Partial<AppState>;
