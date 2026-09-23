@@ -20,6 +20,15 @@ use tauri::{Manager, State};
 use thiserror::Error;
 use tokio_util::sync::CancellationToken;
 
+mod sse;
+use sse::start_sse;
+
+mod websocket;
+use websocket::{WebSocketState, send_websocket_message, start_websocket};
+
+mod grpc;
+use grpc::{inspect_grpc_descriptor, invoke_grpc};
+
 mod history;
 use history::{Database, clear_history, list_history, save_history};
 
@@ -30,7 +39,7 @@ use script::run_script;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct EngineRequest {
+pub(crate) struct EngineRequest {
     method: String,
     url: String,
     headers: HashMap<String, String>,
@@ -113,7 +122,7 @@ struct CookieInfo {
     expires: Option<String>,
 }
 
-struct HttpState {
+pub(crate) struct HttpState {
     cookie_jar: Arc<CookieStoreMutex>,
     cookie_path: PathBuf,
     cancellations: Mutex<HashMap<String, CancellationToken>>,
@@ -188,6 +197,8 @@ enum AppError {
     CancellationLock,
     #[error("authentication error: {0}")]
     Authentication(String),
+    #[error("protocol error: {0}")]
+    Protocol(String),
 }
 
 impl Serialize for AppError {
@@ -524,6 +535,7 @@ pub fn run() {
             let database = Database::open(app)?;
             app.manage(database);
             app.manage(HttpState::open(app)?);
+            app.manage(WebSocketState::new());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -535,7 +547,12 @@ pub fn run() {
             save_history,
             list_history,
             clear_history,
-            run_script
+            start_sse,
+            run_script,
+            start_websocket,
+            send_websocket_message,
+            inspect_grpc_descriptor,
+            invoke_grpc
         ])
         .run(tauri::generate_context!())
         .expect("error while running ApiForge");

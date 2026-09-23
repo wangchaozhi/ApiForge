@@ -19,6 +19,10 @@ base64 = "0.23.1"
 cookie_store = "0.22.1"
 reqwest = { version = "0.13.5", features = ["json", "form", "multipart", "stream", "cookies", "native-tls"] }
 md-5 = "0.10.6"
+futures-util = "0.3.31"
+native-tls = "0.2.18"
+prost = "0.14.4"
+prost-reflect = { version = "0.16.5", features = ["serde"] }
 rand = "0.9.2"
 sha2 = "0.10.9"
 reqwest_cookie_store = "0.10.0"
@@ -29,8 +33,10 @@ tauri = { version = "2.11.6", features = [] }
 tauri-plugin-dialog = "2.7.3"
 tauri-plugin-stronghold = "2.3.2"
 thiserror = "2.0.20"
-tokio = { version = "1.53.1", features = ["macros"] }
+tokio = { version = "1.53.1", features = ["macros", "sync"] }
 tokio-util = { version = "0.7.19", features = ["rt"] }
+tokio-tungstenite = { version = "0.28.0", features = ["native-tls"] }
+tonic = { version = "0.14.6", features = ["transport", "tls-native-roots"] }
 
 [profile.dev.package.scrypt]
 opt-level = 3
