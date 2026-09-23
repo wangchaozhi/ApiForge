@@ -87,6 +87,13 @@ export function serializeWorkspace(data: WorkspaceData, includeSecrets = false) 
         auth: includeSecrets ? request.auth : redactAuthSecrets(request.auth),
       })),
       environmentProfiles: sanitizeProfiles(data.environmentProfiles, includeSecrets),
+      networkSettings: includeSecrets
+        ? data.networkSettings
+        : {
+            ...data.networkSettings,
+            proxyPassword: '',
+            clientCertificatePassword: '',
+          },
     },
   };
   return JSON.stringify(snapshot, null, 2);
