@@ -32,7 +32,12 @@ export function RequestPanel() {
   const [importError, setImportError] = useState<string | null>(null);
   const activeRequestId = useAppStore((state) => state.activeRequestId);
   const request = useAppStore((state) => state.requests.find((item) => item.id === activeRequestId));
-  const variables = useAppStore(getActiveEnvironmentValues);
+  const environmentProfiles = useAppStore((state) => state.environmentProfiles);
+  const activeEnvironmentId = useAppStore((state) => state.activeEnvironmentId);
+  const variables = useMemo(
+    () => getActiveEnvironmentValues({ environmentProfiles, activeEnvironmentId }),
+    [environmentProfiles, activeEnvironmentId],
+  );
   const networkSettings = useAppStore((state) => state.networkSettings);
   const update = useAppStore((state) => state.updateActiveRequest);
   const importRequest = useAppStore((state) => state.importRequest);
