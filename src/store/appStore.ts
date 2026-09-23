@@ -190,6 +190,8 @@ type AppState = {
   deleteEnvironmentProfile: (id: string) => void;
   setActiveEnvironmentProfile: (id: string) => void;
   setEnvironment: (key: string, value: string) => void;
+  setEnvironmentValueForProfile: (profileId: string, key: string, value: string) => void;
+  clearEnvironmentSecretValues: () => void;
   setEnvironmentSecret: (key: string, secret: boolean) => void;
   removeEnvironment: (key: string) => void;
   replaceEnvironmentKey: (oldKey: string, newKey: string) => void;
@@ -403,6 +405,26 @@ export const useAppStore = create<AppState>()(
               },
             }
           : profile),
+      })),
+      setEnvironmentValueForProfile: (profileId, key, value) => set((state) => ({
+        environmentProfiles: state.environmentProfiles.map((profile) => profile.id === profileId
+          ? {
+              ...profile,
+              variables: {
+                ...profile.variables,
+                [key]: { value, secret: profile.variables[key]?.secret ?? false },
+              },
+            }
+          : profile),
+      })),
+      clearEnvironmentSecretValues: () => set((state) => ({
+        environmentProfiles: state.environmentProfiles.map((profile) => ({
+          ...profile,
+          variables: Object.fromEntries(Object.entries(profile.variables).map(([key, variable]) => [
+            key,
+            variable.secret ? { ...variable, value: '' } : variable,
+          ])),
+        })),
       })),
       setEnvironmentSecret: (key, secret) => set((state) => ({
         environmentProfiles: state.environmentProfiles.map((profile) => profile.id === state.activeEnvironmentId
