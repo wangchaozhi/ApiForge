@@ -312,7 +312,14 @@ export const zhCN = {
   "Client streaming": "客户端流式",
   "Native gRPC requires the Tauri desktop runtime.": "原生 gRPC 需要 Tauri 桌面运行时。",
   "Reconnect automatically": "自动重连",
-  "Retry delay (ms)": "重试延迟（毫秒）"
+  "Retry delay (ms)": "重试延迟（毫秒）",
+  "Updates": "更新",
+  "Signed release channel": "签名发布通道",
+  "Check for updates": "检查更新",
+  "Checking…": "检查中…",
+  "Updates require the desktop runtime.": "更新功能需要桌面运行时。",
+  "ApiForge is up to date.": "ApiForge 已是最新版本。",
+  "Downloading version {version}…": "正在下载版本 {version}…"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;

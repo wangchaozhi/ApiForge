@@ -9,13 +9,16 @@ const extensions = { appimage: '.AppImage', deb: '.deb', rpm: '.rpm', dmg: '.dmg
 const files = (await readdir(root, { recursive: true })).filter((file) =>
   bundles.split(',').some((bundle) => file.endsWith(extensions[bundle])),
 ).sort();
+const updaterFiles = (await readdir(root, { recursive: true })).filter((file) =>
+  file.endsWith('.sig') || file.endsWith('.tar.gz') || file.endsWith('.nsis.zip') || file.endsWith('.msi.zip'),
+).sort();
 for (const bundle of bundles.split(',')) {
   if (!files.some((file) => file.endsWith(extensions[bundle]))) throw new Error(`Missing ${bundle} installer`);
 }
 await mkdir('release-artifacts', { recursive: true });
 const hashes = [];
 const names = new Set();
-for (const file of files) {
+for (const file of [...files, ...updaterFiles]) {
   const name = basename(file);
   if (names.has(name)) throw new Error(`Duplicate installer name: ${name}`);
   names.add(name);
@@ -24,4 +27,4 @@ for (const file of files) {
   hashes.push(`${hash}  ${name}`);
 }
 await writeFile(`release-artifacts/SHA256SUMS-${platform}.txt`, `${hashes.join('\n')}\n`);
-console.log(`Collected ${files.length} installers for ${platform}`);
+console.log(`Collected ${files.length} installers and ${updaterFiles.length} updater files for ${platform}`);

@@ -1,6 +1,7 @@
 import { translate as t } from '../i18n';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { durableLocalStorage } from '../lib/durableStorage';
 import { redactAuthSecrets } from '../lib/auth';
 import { createId } from '../lib/id';
 import type { WorkspaceData } from '../lib/workspace';
@@ -563,6 +564,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'apiforge-workspace-v2',
+      storage: createJSONStorage(() => durableLocalStorage),
       partialize: (state) => ({
         requests: state.requests.map((request) => ({ ...request, auth: redactAuthSecrets(request.auth) })),
         collections: state.collections,
