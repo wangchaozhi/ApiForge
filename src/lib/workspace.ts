@@ -1,3 +1,4 @@
+import { redactAuthSecrets } from './auth';
 import { createId } from './id';
 import type {
   ApiCollection,
@@ -81,6 +82,10 @@ export function serializeWorkspace(data: WorkspaceData, includeSecrets = false) 
     exportedAt: new Date().toISOString(),
     data: {
       ...data,
+      requests: data.requests.map((request) => ({
+        ...request,
+        auth: includeSecrets ? request.auth : redactAuthSecrets(request.auth),
+      })),
       environmentProfiles: sanitizeProfiles(data.environmentProfiles, includeSecrets),
     },
   };
@@ -378,8 +383,8 @@ function requestToPostman(request: ApiRequest) {
   };
 }
 
-export function serializePostmanCollection(collection: ApiCollection, requests: ApiRequest[]) {
-  const byId = new Map(requests.map((request) => [request.id, request]));
+export function serializePostmanCollection(collection: ApiCollection, requests: ApiRequest[], includeSecrets = false) {
+  const byId = new Map(requests.map((request) => [request.id, includeSecrets ? request : { ...request, auth: redactAuthSecrets(request.auth) }]));
   const rootItems = collection.requestIds.flatMap((id) => {
     const request = byId.get(id);
     return request ? [requestToPostman(request)] : [];
