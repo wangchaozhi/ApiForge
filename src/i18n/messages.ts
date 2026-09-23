@@ -235,7 +235,14 @@ export const zhCN = {
   "Raw stream": "原始流",
   "No SSE events yet": "暂无 SSE 事件",
   "Connect to an SSE endpoint to watch events arrive live.": "连接 SSE 接口后可实时查看事件。",
-  "Raw SSE bytes will appear here as UTF-8 text.": "原始 SSE 字节会以 UTF-8 文本显示在这里。"
+  "Raw SSE bytes will appear here as UTF-8 text.": "原始 SSE 字节会以 UTF-8 文本显示在这里。",
+
+  "Schema": "Schema",
+  "Load schema": "加载 Schema",
+  "Search schema": "搜索 Schema",
+  "No schema loaded": "尚未加载 Schema",
+  "Run GraphQL introspection to browse types and fields.": "运行 GraphQL introspection 以浏览类型和字段。",
+  "GraphQL schema request failed.": "GraphQL Schema 请求失败。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
