@@ -221,7 +221,21 @@ export const zhCN = {
   "No GraphQL response yet": "暂无 GraphQL 响应",
   "Write a query and send it to inspect the response.": "编写查询并发送以查看响应。",
   "Method": "方法",
-  "Status": "状态"
+  "Status": "状态",
+  "SSE": "SSE",
+  "Server-Sent Events": "服务器发送事件",
+  "Stream SSE through the native HTTP engine with shared TLS, proxy, cookies, and environment settings.": "通过原生 HTTP 引擎流式接收 SSE，并共享 TLS、代理、Cookie 和环境变量设置。",
+  "Disconnected": "未连接",
+  "Connected": "已连接",
+  "Connecting…": "连接中…",
+  "Disconnect": "断开连接",
+  "Connect": "连接",
+  "{count} response headers": "{count} 个响应头",
+  "Events": "事件",
+  "Raw stream": "原始流",
+  "No SSE events yet": "暂无 SSE 事件",
+  "Connect to an SSE endpoint to watch events arrive live.": "连接 SSE 接口后可实时查看事件。",
+  "Raw SSE bytes will appear here as UTF-8 text.": "原始 SSE 字节会以 UTF-8 文本显示在这里。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
