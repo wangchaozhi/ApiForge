@@ -10,7 +10,6 @@ export type SseEvent = {
 
 export type SseParserState = {
   buffer: string;
-  lastEventId: string;
 };
 
 export type SseOpened = {
@@ -45,16 +44,20 @@ type SseHandlers = {
 };
 
 export function createSseParserState(): SseParserState {
-  return { buffer: '', lastEventId: '' };
+  return { buffer: '' };
 }
 
-function parseBlock(state: SseParserState, block: string): SseEvent | null {
+function normalizeCompletedBlock(block: string) {
+  return block.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
+export function parseSseBlock(block: string): SseEvent | null {
   let event = 'message';
   const data: string[] = [];
+  let id: string | undefined;
   let retry: number | undefined;
-  let nextEventId = state.lastEventId;
 
-  for (const line of block.split(/\r\n|\r|\n/)) {
+  for (const line of normalizeCompletedBlock(block).split('\n')) {
     if (!line || line.startsWith(':')) continue;
     const colon = line.indexOf(':');
     const field = colon >= 0 ? line.slice(0, colon) : line;
@@ -63,32 +66,38 @@ function parseBlock(state: SseParserState, block: string): SseEvent | null {
 
     if (field === 'event') event = value || 'message';
     else if (field === 'data') data.push(value);
-    else if (field === 'id' && !value.includes('\0')) nextEventId = value;
+    else if (field === 'id' && !value.includes('\0')) id = value;
     else if (field === 'retry' && /^\d+$/.test(value)) retry = Number(value);
   }
 
-  state.lastEventId = nextEventId;
   if (!data.length) return null;
+  return { event, data: data.join('\n'), id, retry };
+}
 
-  return {
-    event,
-    data: data.join('\n'),
-    ...(state.lastEventId ? { id: state.lastEventId } : {}),
-    ...(retry === undefined ? {} : { retry }),
-  };
+function findBoundary(buffer: string) {
+  for (let index = 0; index < buffer.length - 1; index += 1) {
+    const first = buffer[index];
+    const second = buffer[index + 1];
+    if (first === '\n' && second === '\n') return { index, length: 2 };
+    if (first === '\r' && second === '\r') return { index, length: 2 };
+    if (index < buffer.length - 3
+      && buffer.slice(index, index + 4) === '\r\n\r\n') {
+      return { index, length: 4 };
+    }
+  }
+  return null;
 }
 
 export function pushSseChunk(state: SseParserState, chunk: string) {
   state.buffer += chunk;
   const events: SseEvent[] = [];
-  const boundaryPattern = /(?:\r\n|\r|\n)(?:\r\n|\r|\n)/;
 
   while (true) {
-    const boundary = boundaryPattern.exec(state.buffer);
-    if (!boundary || boundary.index === undefined) break;
+    const boundary = findBoundary(state.buffer);
+    if (!boundary) break;
     const block = state.buffer.slice(0, boundary.index);
-    state.buffer = state.buffer.slice(boundary.index + boundary[0].length);
-    const event = parseBlock(state, block);
+    state.buffer = state.buffer.slice(boundary.index + boundary.length);
+    const event = parseSseBlock(block);
     if (event) events.push(event);
   }
 
@@ -98,7 +107,7 @@ export function pushSseChunk(state: SseParserState, chunk: string) {
 export function flushSse(state: SseParserState) {
   const block = state.buffer;
   state.buffer = '';
-  return block ? parseBlock(state, block) : null;
+  return block ? parseSseBlock(block) : null;
 }
 
 export async function streamSse(
@@ -115,12 +124,12 @@ export async function streamSse(
     import('@tauri-apps/api/event'),
   ]);
 
-  const decoder = new TextDecoder();
   const parser = createSseParserState();
+  const decoder = new TextDecoder();
   let closed = false;
 
-  const unlisten = await listen<NativeSseEvent>('apiforge://sse', (event) => {
-    const payload = event.payload;
+  const unlisten = await listen<NativeSseEvent>('apiforge://sse', (message) => {
+    const payload = message.payload;
     if (payload.operationId !== operationId) return;
 
     if (payload.type === 'opened') {
@@ -136,14 +145,14 @@ export async function streamSse(
       const text = decoder.decode(new Uint8Array(payload.bytes), { stream: true });
       if (!text) return;
       handlers.onRawText?.(text);
-      for (const parsed of pushSseChunk(parser, text)) handlers.onEvent?.(parsed);
+      for (const event of pushSseChunk(parser, text)) handlers.onEvent?.(event);
       return;
     }
 
-    const finalText = decoder.decode();
-    if (finalText) {
-      handlers.onRawText?.(finalText);
-      for (const parsed of pushSseChunk(parser, finalText)) handlers.onEvent?.(parsed);
+    const tail = decoder.decode();
+    if (tail) {
+      handlers.onRawText?.(tail);
+      for (const event of pushSseChunk(parser, tail)) handlers.onEvent?.(event);
     }
     const finalEvent = flushSse(parser);
     if (finalEvent) handlers.onEvent?.(finalEvent);
