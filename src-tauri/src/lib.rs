@@ -26,7 +26,7 @@ use sse::start_sse;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct EngineRequest {
+pub(crate) struct EngineRequest {
     method: String,
     url: String,
     headers: HashMap<String, String>,
@@ -116,7 +116,7 @@ struct Database {
     connection: Mutex<Connection>,
 }
 
-struct HttpState {
+pub(crate) struct HttpState {
     cookie_jar: Arc<CookieStoreMutex>,
     cookie_path: PathBuf,
     cancellations: Mutex<HashMap<String, CancellationToken>>,
