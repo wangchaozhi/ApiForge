@@ -1,6 +1,7 @@
 import { translate as t } from '../i18n';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { redactAuthSecrets } from '../lib/auth';
 import { createId } from '../lib/id';
 import type { WorkspaceData } from '../lib/workspace';
 import type {
@@ -545,7 +546,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'apiforge-workspace-v2',
       partialize: (state) => ({
-        requests: state.requests,
+        requests: state.requests.map((request) => ({ ...request, auth: redactAuthSecrets(request.auth) })),
         collections: state.collections,
         openRequestIds: state.openRequestIds,
         activeRequestId: state.activeRequestId,
