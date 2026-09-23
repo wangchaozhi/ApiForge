@@ -9,6 +9,7 @@ import { RequestTabs } from './components/RequestTabs';
 import { ResponsePanel } from './components/ResponsePanel';
 import { RunnerPanel } from './components/RunnerPanel';
 import { SettingsPanel } from './components/SettingsPanel';
+import { SsePanel } from './components/SsePanel';
 import { Sidebar } from './components/Sidebar';
 import { loadHistory } from './lib/history';
 import { useAppStore } from './store/appStore';
@@ -63,6 +64,7 @@ export default function App() {
         )}
         {activeView === 'runner' && <RunnerPanel />}
         {activeView === 'graphql' && <GraphqlPanel />}
+        {activeView === 'sse' && <SsePanel />}
         {activeView === 'history' && <HistoryPanel />}
         {activeView === 'environments' && <EnvironmentPanel />}
         {activeView === 'cookies' && <CookieManagerPanel />}
