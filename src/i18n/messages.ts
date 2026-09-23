@@ -287,7 +287,32 @@ export const zhCN = {
   "Certificate PEM": "证书 PEM",
   "PKCS#8 private key": "PKCS#8 私钥",
   "Certificate password": "证书密码",
-  "Certificate passwords are session-only and are not saved to workspace storage.": "证书密码仅保留在当前会话中，不会写入工作区存储。"
+  "Certificate passwords are session-only and are not saved to workspace storage.": "证书密码仅保留在当前会话中，不会写入工作区存储。",
+  "WebSocket": "WebSocket",
+  "Open a native WebSocket session and inspect its message timeline.": "打开原生 WebSocket 会话并检查消息时间线。",
+  "Message timeline": "消息时间线",
+  "No WebSocket messages yet": "暂无 WebSocket 消息",
+  "Connect and send a message to begin.": "连接并发送消息后开始记录。",
+  "Message payload": "消息内容",
+  "Binary": "二进制",
+  "Format JSON": "格式化 JSON",
+  "Message is not valid JSON.": "消息不是有效的 JSON。",
+  "Native WebSocket requires the Tauri desktop runtime.": "原生 WebSocket 需要 Tauri 桌面运行时。",
+  "gRPC": "gRPC",
+  "Invoke unary and server-streaming methods from a protobuf descriptor set.": "通过 Protobuf 描述符集调用一元和服务端流式方法。",
+  "Import descriptor": "导入描述符",
+  "Service": "服务",
+  "Invoke": "调用",
+  "Running…": "运行中…",
+  "Request JSON": "请求 JSON",
+  "Metadata": "元数据",
+  "Responses": "响应",
+  "Unary": "一元",
+  "Server streaming": "服务端流式",
+  "Client streaming": "客户端流式",
+  "Native gRPC requires the Tauri desktop runtime.": "原生 gRPC 需要 Tauri 桌面运行时。",
+  "Reconnect automatically": "自动重连",
+  "Retry delay (ms)": "重试延迟（毫秒）"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;

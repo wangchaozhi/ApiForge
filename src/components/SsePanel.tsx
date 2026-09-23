@@ -1,5 +1,5 @@
 import { Radio, Square, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { translate as t, useLocale } from '../i18n';
 import { createId } from '../lib/id';
 import { toEngineRequest } from '../lib/request';
@@ -37,7 +37,12 @@ const starterRequest = (): ApiRequest => ({
 
 export function SsePanel() {
   useLocale();
-  const environment = useAppStore(getActiveEnvironmentValues);
+  const environmentProfiles = useAppStore((state) => state.environmentProfiles);
+  const activeEnvironmentId = useAppStore((state) => state.activeEnvironmentId);
+  const environment = useMemo(
+    () => getActiveEnvironmentValues({ environmentProfiles, activeEnvironmentId }),
+    [environmentProfiles, activeEnvironmentId],
+  );
   const networkSettings = useAppStore((state) => state.networkSettings);
 
   const [request, setRequest] = useState<ApiRequest>(() => starterRequest());
@@ -48,6 +53,10 @@ export function SsePanel() {
   const [error, setError] = useState<string | null>(null);
   const [sideTab, setSideTab] = useState<'headers' | 'auth'>('headers');
   const [streamTab, setStreamTab] = useState<'events' | 'raw'>('events');
+  const [autoReconnect, setAutoReconnect] = useState(true);
+  const [reconnectDelay, setReconnectDelay] = useState(1000);
+  const keepConnected = useRef(false);
+  const lastEventId = useRef('');
 
   const running = operationId !== null;
   const connectionLabel = useMemo(() => {
@@ -62,49 +71,63 @@ export function SsePanel() {
   const connect = async () => {
     if (running) return;
     const nextOperationId = createId('sse-op');
+    keepConnected.current = true;
     setOperationId(nextOperationId);
     setOpened(null);
     setEvents([]);
     setRawText('');
     setError(null);
 
-    const engineRequest = toEngineRequest(
-      { ...request, method: 'GET', bodyType: 'none', body: '' },
-      environment,
-      networkSettings,
-    );
-
-    if (!Object.keys(engineRequest.headers).some((key) => key.toLowerCase() === 'accept')) {
-      engineRequest.headers.Accept = 'text/event-stream';
-    }
-
+    let currentOperationId = nextOperationId;
     try {
-      await streamSse(engineRequest, nextOperationId, {
-        onOpen: (value) => setOpened(value),
-        onEvent: (event) => {
-          setEvents((current) => [
-            ...current.slice(-999),
-            {
-              ...event,
-              key: createId('sse-event'),
-              receivedAt: new Date().toLocaleTimeString(),
+      do {
+        currentOperationId = createId('sse-op');
+        setOperationId(currentOperationId);
+        setOpened(null);
+        const engineRequest = toEngineRequest(
+          { ...request, method: 'GET', bodyType: 'none', body: '' },
+          environment,
+          networkSettings,
+        );
+        if (!Object.keys(engineRequest.headers).some((key) => key.toLowerCase() === 'accept')) engineRequest.headers.Accept = 'text/event-stream';
+        if (lastEventId.current) engineRequest.headers['Last-Event-ID'] = lastEventId.current;
+        try {
+          await streamSse(engineRequest, currentOperationId, {
+            onOpen: (value) => setOpened(value),
+            onEvent: (event) => {
+              if (event.id) lastEventId.current = event.id;
+              if (event.retry !== undefined) setReconnectDelay(Math.max(100, event.retry));
+              setEvents((current) => [
+                ...current.slice(-999),
+                {
+                  ...event,
+                  key: createId('sse-event'),
+                  receivedAt: new Date().toLocaleTimeString(),
+                },
+              ]);
             },
-          ]);
-        },
-        onRawText: (text) => {
-          setRawText((current) => (current + text).slice(-524_288));
-        },
-      });
+            onRawText: (text) => {
+              setRawText((current) => (current + text).slice(-524_288));
+            },
+          });
+        } catch (cause) {
+          const message = cause instanceof Error ? cause.message : String(cause);
+          if (!message.toLowerCase().includes('cancel')) setError(message);
+        }
+        if (!keepConnected.current || !autoReconnect) break;
+        await new Promise((resolve) => window.setTimeout(resolve, reconnectDelay));
+      } while (keepConnected.current);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause);
       if (!message.toLowerCase().includes('cancel')) setError(message);
     } finally {
-      setOperationId((current) => current === nextOperationId ? null : current);
+      setOperationId((current) => current === currentOperationId ? null : current);
     }
   };
 
   const disconnect = async () => {
     if (!operationId) return;
+    keepConnected.current = false;
     await cancelSse(operationId).catch(() => undefined);
   };
 
@@ -173,6 +196,10 @@ export function SsePanel() {
               <span>{t('{count} response headers', { count: Object.keys(opened.headers).length })}</span>
             </div>
           )}
+          <div className="sse-reconnect-settings">
+            <label><input type="checkbox" checked={autoReconnect} onChange={(event) => setAutoReconnect(event.target.checked)} />{t('Reconnect automatically')}</label>
+            <label>{t('Retry delay (ms)')}<input type="number" min={100} max={60000} value={reconnectDelay} onChange={(event) => setReconnectDelay(Math.max(100, Number(event.target.value) || 1000))} /></label>
+          </div>
         </aside>
 
         <main className="sse-stream">

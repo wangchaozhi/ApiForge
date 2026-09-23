@@ -150,4 +150,4 @@ export type CookieInfo = {
   expires: string | null;
 };
 
-export type WorkspaceView = 'collections' | 'runner' | 'graphql' | 'sse' | 'history' | 'environments' | 'cookies' | 'settings';
+export type WorkspaceView = 'collections' | 'runner' | 'graphql' | 'grpc' | 'websocket' | 'sse' | 'history' | 'environments' | 'cookies' | 'settings';

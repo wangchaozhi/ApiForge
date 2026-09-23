@@ -23,6 +23,12 @@ use tokio_util::sync::CancellationToken;
 mod sse;
 use sse::start_sse;
 
+mod websocket;
+use websocket::{WebSocketState, send_websocket_message, start_websocket};
+
+mod grpc;
+use grpc::{inspect_grpc_descriptor, invoke_grpc};
+
 mod history;
 use history::{Database, clear_history, list_history, save_history};
 
@@ -191,6 +197,8 @@ enum AppError {
     CancellationLock,
     #[error("authentication error: {0}")]
     Authentication(String),
+    #[error("protocol error: {0}")]
+    Protocol(String),
 }
 
 impl Serialize for AppError {
@@ -527,6 +535,7 @@ pub fn run() {
             let database = Database::open(app)?;
             app.manage(database);
             app.manage(HttpState::open(app)?);
+            app.manage(WebSocketState::new());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -539,7 +548,11 @@ pub fn run() {
             list_history,
             clear_history,
             start_sse,
-            run_script
+            run_script,
+            start_websocket,
+            send_websocket_message,
+            inspect_grpc_descriptor,
+            invoke_grpc
         ])
         .run(tauri::generate_context!())
         .expect("error while running ApiForge");

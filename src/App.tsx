@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { CookieManagerPanel } from './components/CookieManagerPanel';
 import { EnvironmentPanel } from './components/EnvironmentPanel';
 import { GraphqlPanel } from './components/GraphqlPanel';
+import { GrpcPanel } from './components/GrpcPanel';
 import { HistoryPanel } from './components/HistoryPanel';
 import { RequestPanel } from './components/RequestPanel';
 import { RequestTabs } from './components/RequestTabs';
@@ -10,6 +11,7 @@ import { ResponsePanel } from './components/ResponsePanel';
 import { RunnerPanel } from './components/RunnerPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { SsePanel } from './components/SsePanel';
+import { WebSocketPanel } from './components/WebSocketPanel';
 import { Sidebar } from './components/Sidebar';
 import { loadHistory } from './lib/history';
 import { useAppStore } from './store/appStore';
@@ -64,6 +66,8 @@ export default function App() {
         )}
         {activeView === 'runner' && <RunnerPanel />}
         {activeView === 'graphql' && <GraphqlPanel />}
+        {activeView === 'grpc' && <GrpcPanel />}
+        {activeView === 'websocket' && <WebSocketPanel />}
         {activeView === 'sse' && <SsePanel />}
         {activeView === 'history' && <HistoryPanel />}
         {activeView === 'environments' && <EnvironmentPanel />}
