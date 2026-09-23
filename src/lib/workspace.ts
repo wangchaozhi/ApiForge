@@ -1,3 +1,4 @@
+import { redactAuthSecrets } from './auth';
 import { createId } from './id';
 import type {
   ApiCollection,
@@ -81,7 +82,18 @@ export function serializeWorkspace(data: WorkspaceData, includeSecrets = false) 
     exportedAt: new Date().toISOString(),
     data: {
       ...data,
+      requests: data.requests.map((request) => ({
+        ...request,
+        auth: includeSecrets ? request.auth : redactAuthSecrets(request.auth),
+      })),
       environmentProfiles: sanitizeProfiles(data.environmentProfiles, includeSecrets),
+      networkSettings: includeSecrets
+        ? data.networkSettings
+        : {
+            ...data.networkSettings,
+            proxyPassword: '',
+            clientCertificatePassword: '',
+          },
     },
   };
   return JSON.stringify(snapshot, null, 2);
@@ -121,11 +133,14 @@ function postmanAuth(auth: JsonRecord | undefined): AuthConfig {
       flow: read('oauth2', 'grant_type') === 'client_credentials' ? 'client-credentials' : 'authorization-code',
       authorizationUrl: read('oauth2', 'authUrl'),
       tokenUrl: read('oauth2', 'accessTokenUrl'),
+      redirectUri: read('oauth2', 'redirect_uri') || read('oauth2', 'callbackUrl'),
       clientId: read('oauth2', 'clientId'),
       clientSecret: read('oauth2', 'clientSecret'),
       scopes: read('oauth2', 'scope'),
       usePkce: read('oauth2', 'challengeAlgorithm') !== '',
       accessToken: read('oauth2', 'accessToken'),
+      refreshToken: '',
+      expiresAt: null,
     };
   }
   return { type: 'none' };
@@ -302,6 +317,7 @@ function authToPostman(auth: AuthConfig) {
         { key: 'grant_type', value: auth.flow === 'client-credentials' ? 'client_credentials' : 'authorization_code', type: 'string' },
         { key: 'authUrl', value: auth.authorizationUrl, type: 'string' },
         { key: 'accessTokenUrl', value: auth.tokenUrl, type: 'string' },
+        { key: 'redirect_uri', value: auth.redirectUri, type: 'string' },
         { key: 'clientId', value: auth.clientId, type: 'string' },
         { key: 'clientSecret', value: auth.clientSecret, type: 'string' },
         { key: 'scope', value: auth.scopes, type: 'string' },
@@ -378,8 +394,8 @@ function requestToPostman(request: ApiRequest) {
   };
 }
 
-export function serializePostmanCollection(collection: ApiCollection, requests: ApiRequest[]) {
-  const byId = new Map(requests.map((request) => [request.id, request]));
+export function serializePostmanCollection(collection: ApiCollection, requests: ApiRequest[], includeSecrets = false) {
+  const byId = new Map(requests.map((request) => [request.id, includeSecrets ? request : { ...request, auth: redactAuthSecrets(request.auth) }]));
   const rootItems = collection.requestIds.flatMap((id) => {
     const request = byId.get(id);
     return request ? [requestToPostman(request)] : [];

@@ -29,3 +29,120 @@
 @media (max-width: 980px) {
   .script-editors { grid-template-columns: 1fr; }
 }
+
+
+.runner-page { min-height: calc(100vh - 49px); max-height: calc(100vh - 49px); display: flex; flex-direction: column; background: var(--panel); overflow: hidden; }
+.runner-actions { display: flex; gap: 7px; align-items: center; }
+.runner-config { display: grid; grid-template-columns: minmax(220px, 1fr) 120px 140px minmax(180px, .8fr); gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--border); background: #14171d; }
+.runner-config label { min-width: 0; display: flex; flex-direction: column; gap: 5px; color: #788190; font-size: 9px; }
+.runner-config select,
+.runner-config input[type="number"] { height: 31px; border: 1px solid var(--border); border-radius: 6px; background: #11141a; color: #d0d5de; padding: 0 9px; outline: 0; font-size: 10px; }
+.runner-toggle { flex-direction: row !important; align-items: center; gap: 8px !important; align-self: end; height: 31px; }
+.runner-toggle input { accent-color: var(--accent); }
+.runner-summary { display: flex; gap: 12px; align-items: center; padding: 10px 18px; border-bottom: 1px solid var(--border-soft); color: #77808e; font-size: 9.5px; }
+.runner-summary strong { color: #cfd4dd; font-size: 10.5px; }
+.runner-results { min-height: 0; flex: 1; overflow: auto; }
+.runner-result-row { min-height: 43px; display: grid; grid-template-columns: 70px 74px minmax(220px, 1fr) 80px 95px; align-items: center; gap: 10px; padding: 7px 16px; border-bottom: 1px solid var(--border-soft); color: #adb4c0; font-size: 10px; }
+.runner-result-row.head { min-height: 34px; position: sticky; top: 0; z-index: 1; background: #181b22; color: #717a88; text-transform: uppercase; letter-spacing: .6px; font-size: 8.5px; }
+.runner-result-row.error { background: #211518; }
+.runner-result-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.runner-result-row strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; color: #d1d6df; }
+.runner-result-row small { display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c8797e; font-size: 8.5px; }
+.runner-result-row small.runner-tests-passed { color: #70b48b; }
+.runner-result-row small.runner-log-summary { color: #77889f; }
+@media (max-width: 1080px) {
+  .runner-config { grid-template-columns: 1fr 110px 120px; }
+  .runner-toggle { grid-column: 1 / -1; align-self: start; }
+}
+
+
+.graphql-page { min-height: calc(100vh - 49px); max-height: calc(100vh - 49px); display: flex; flex-direction: column; background: var(--panel); overflow: hidden; }
+.graphql-url-row { min-height: 52px; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 9px 14px; border-bottom: 1px solid var(--border); background: #14171d; color: #7d8795; }
+.graphql-url-row > input { height: 34px; border: 1px solid var(--border); border-radius: 6px; background: #0f1217; color: #d4d9e1; padding: 0 10px; outline: 0; font: 11px "SFMono-Regular", Consolas, monospace; }
+.graphql-url-row > input:focus { border-color: #566176; }
+.graphql-grid { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(320px, 1.1fr) minmax(260px, .9fr) minmax(280px, .9fr); grid-template-rows: minmax(260px, .55fr) minmax(220px, .45fr); gap: 1px; background: var(--border); }
+.graphql-editor-column,
+.graphql-side-column,
+.graphql-response { min-width: 0; min-height: 0; background: var(--panel); display: flex; flex-direction: column; overflow: hidden; }
+.graphql-section-heading,
+.graphql-response-heading { min-height: 42px; padding: 8px 11px; display: flex; align-items: center; gap: 10px; justify-content: space-between; border-bottom: 1px solid var(--border-soft); background: #161920; }
+.graphql-section-heading strong,
+.graphql-response-heading strong { color: #d0d5dd; font-size: 10px; }
+.graphql-section-heading input { width: 200px; height: 26px; border: 1px solid var(--border); border-radius: 5px; background: #101319; color: #bfc6d1; padding: 0 8px; outline: 0; font-size: 9.5px; }
+.graphql-response-heading span { color: #798291; font: 9px "SFMono-Regular", Consolas, monospace; }
+.graphql-side-column { grid-column: 3; grid-row: 1 / span 2; }
+.graphql-tabs { flex-shrink: 0; }
+.graphql-side-content { min-height: 0; flex: 1; overflow: auto; }
+.graphql-response { grid-column: 1 / span 2; grid-row: 2; }
+.graphql-error { flex: 1; margin: 0; padding: 14px; overflow: auto; background: #1b1114; color: #d58b90; font: 10px/1.55 "SFMono-Regular", Consolas, monospace; white-space: pre-wrap; }
+.graphql-editor-column .monaco-editor-shell,
+.graphql-response .monaco-editor-shell { min-height: 0; flex: 1; }
+@media (max-width: 1120px) {
+  .graphql-grid { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(250px, .5fr) minmax(230px, .5fr) 280px; }
+  .graphql-side-column { grid-column: 1 / span 2; grid-row: 3; }
+  .graphql-response { grid-column: 1 / span 2; grid-row: 2; }
+}
+
+
+.sse-page { min-height: calc(100vh - 49px); max-height: calc(100vh - 49px); display: flex; flex-direction: column; background: var(--panel); overflow: hidden; }
+.sse-status { display: flex; align-items: center; gap: 7px; color: #858e9c; font-size: 9.5px; }
+.sse-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #626a76; box-shadow: 0 0 0 3px #626a7618; }
+.sse-status-dot.connecting { background: #bd9a58; box-shadow: 0 0 0 3px #bd9a5820; }
+.sse-status-dot.connected { background: #63b37f; box-shadow: 0 0 0 3px #63b37f24; }
+.sse-url-row { min-height: 52px; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 9px 14px; border-bottom: 1px solid var(--border); background: #14171d; color: #7d8795; }
+.sse-url-row > input { height: 34px; border: 1px solid var(--border); border-radius: 6px; background: #0f1217; color: #d4d9e1; padding: 0 10px; outline: 0; font: 11px "SFMono-Regular", Consolas, monospace; }
+.sse-url-row > input:focus { border-color: #566176; }
+.sse-layout { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(320px, .8fr) minmax(420px, 1.2fr); gap: 1px; background: var(--border); }
+.sse-settings, .sse-stream { min-width: 0; min-height: 0; background: var(--panel); display: flex; flex-direction: column; overflow: hidden; }
+.sse-settings-content { min-height: 0; flex: 1; overflow: auto; }
+.sse-open-info { flex-shrink: 0; padding: 10px 12px; border-top: 1px solid var(--border-soft); background: #15181e; }
+.sse-open-info strong { display: block; color: #d0d5de; font-size: 10px; }
+.sse-open-info span { display: block; margin-top: 3px; color: #788290; font-size: 9px; }
+.sse-reconnect-settings { flex-shrink: 0; display: flex; gap: 12px; align-items: center; padding: 9px 11px; border-top: 1px solid var(--border-soft); color: #7e8795; font-size: 9px; }
+.sse-reconnect-settings label { display: flex; align-items: center; gap: 6px; }
+.sse-reconnect-settings input[type="number"] { width: 82px; height: 25px; border: 1px solid var(--border); border-radius: 5px; background: #101319; color: #c6ccd5; padding: 0 6px; }
+.sse-stream-toolbar { min-height: 43px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-right: 10px; border-bottom: 1px solid var(--border-soft); background: #171a20; }
+.sse-stream-toolbar .tabs { border-bottom: 0; }
+.sse-stream-toolbar .tabs button span { margin-left: 5px; color: #727c89; }
+.sse-error { padding: 8px 11px; border-bottom: 1px solid #5f2d34; background: #211317; color: #d88a91; font-size: 9.5px; }
+.sse-event-list { min-height: 0; flex: 1; overflow: auto; padding: 10px; }
+.sse-event-card { margin-bottom: 8px; border: 1px solid var(--border); border-radius: 7px; background: #12151a; overflow: hidden; }
+.sse-event-card header { min-height: 33px; display: flex; align-items: center; gap: 9px; padding: 6px 9px; border-bottom: 1px solid var(--border-soft); background: #171a20; color: #747e8c; font-size: 8.5px; }
+.sse-event-card header > span { color: #657080; }
+.sse-event-card header strong { color: #cbd1db; font-size: 9.5px; }
+.sse-event-card header code { padding: 2px 5px; border-radius: 4px; background: #0f1217; color: #8f9bab; font: 8px "SFMono-Regular", Consolas, monospace; }
+.sse-event-card header time { margin-left: auto; }
+.sse-event-card pre, .sse-raw { margin: 0; white-space: pre-wrap; word-break: break-word; font: 10px/1.55 "SFMono-Regular", Consolas, monospace; color: #bfc6d1; }
+.sse-event-card pre { padding: 10px; max-height: 260px; overflow: auto; }
+.sse-raw { min-height: 0; flex: 1; overflow: auto; padding: 12px; background: #101318; }
+@media (max-width: 1050px) {
+  .sse-layout { grid-template-columns: 1fr; grid-template-rows: minmax(250px, .8fr) minmax(320px, 1.2fr); }
+}
+
+
+.graphql-schema { min-height: 0; height: 100%; display: flex; flex-direction: column; }
+.graphql-schema-toolbar { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px; padding: 9px; border-bottom: 1px solid var(--border-soft); background: #15181e; }
+.graphql-schema-toolbar input { min-width: 0; height: 30px; border: 1px solid var(--border); border-radius: 6px; background: #101319; color: #cdd2db; padding: 0 8px; outline: 0; font-size: 9.5px; }
+.graphql-schema-toolbar input:focus { border-color: #566176; }
+.graphql-schema-list { min-height: 0; flex: 1; overflow: auto; padding: 8px; }
+.graphql-schema-type { margin-bottom: 7px; border: 1px solid var(--border); border-radius: 7px; background: #12151a; overflow: hidden; }
+.graphql-schema-type header { min-height: 34px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 9px; border-bottom: 1px solid var(--border-soft); background: #171a20; }
+.graphql-schema-type header strong { color: #d0d5de; font: 10px "SFMono-Regular", Consolas, monospace; }
+.graphql-schema-type header span { color: #748091; font-size: 8px; text-transform: uppercase; letter-spacing: .55px; }
+.graphql-schema-type p { margin: 0; padding: 8px 9px 0; color: #788290; font-size: 9px; line-height: 1.45; }
+.graphql-schema-fields { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 9px 10px; }
+.graphql-schema-fields code { padding: 3px 5px; border-radius: 4px; background: #0e1116; color: #97a3b4; font: 8.5px "SFMono-Regular", Consolas, monospace; }
+
+.websocket-composer { flex-shrink: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; padding: 10px; border-top: 1px solid var(--border); background: #15181e; }
+.websocket-composer textarea { min-height: 72px; resize: vertical; border: 1px solid var(--border); border-radius: 6px; background: #0f1217; color: #d0d5de; padding: 8px; font: 10px/1.45 "SFMono-Regular", Consolas, monospace; }
+.websocket-composer > div { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-end; gap: 7px; }
+.websocket-composer label { display: flex; align-items: center; gap: 5px; color: #808997; font-size: 9px; }
+
+.grpc-page { min-height: calc(100vh - 49px); max-height: calc(100vh - 49px); display: flex; flex-direction: column; overflow: hidden; background: var(--panel); }
+.grpc-toolbar { min-height: 54px; display: grid; grid-template-columns: 24px minmax(220px, 1fr) minmax(180px, .8fr) minmax(150px, .6fr) auto; gap: 8px; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--border); background: #14171d; color: #7d8795; }
+.grpc-toolbar input, .grpc-toolbar select { min-width: 0; height: 34px; border: 1px solid var(--border); border-radius: 6px; background: #0f1217; color: #d1d6df; padding: 0 9px; outline: none; font-size: 10px; }
+.grpc-grid { min-height: 0; flex: 1; display: grid; grid-template-columns: 1fr .8fr; grid-template-rows: 1fr 1fr; gap: 1px; background: var(--border); }
+.grpc-editor, .grpc-metadata, .grpc-response { min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--panel); }
+.grpc-editor textarea { min-height: 0; flex: 1; resize: none; border: 0; outline: 0; padding: 12px; background: #101318; color: #cbd1da; font: 10px/1.55 "SFMono-Regular", Consolas, monospace; }
+.grpc-response { grid-column: 1 / span 2; }
+.grpc-response > pre:not(.graphql-error) { min-height: 0; flex: 1; margin: 0; overflow: auto; padding: 12px; background: #101318; color: #bfc7d2; white-space: pre-wrap; font: 10px/1.55 "SFMono-Regular", Consolas, monospace; }

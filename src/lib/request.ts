@@ -1,5 +1,5 @@
 import { translate as t } from '../i18n';
-import type { ApiRequest, ApiResponse, CookieInfo, EngineBody, EngineRequest, NetworkSettings } from '../types/api';
+import type { ApiRequest, ApiResponse, AuthConfig, CookieInfo, EngineBody, EngineField, EngineRequest, NetworkSettings } from '../types/api';
 
 const browserControllers = new Map<string, AbortController>();
 
@@ -123,6 +123,12 @@ export function toEngineRequest(
     headers,
     body: buildBody(request, variables),
     network,
+    digestAuth: request.auth.type === 'digest'
+      ? {
+          username: interpolate(request.auth.username, variables),
+          password: interpolate(request.auth.password, variables),
+        }
+      : undefined,
   };
 }
 
@@ -151,6 +157,10 @@ export async function sendApiRequest(request: EngineRequest, operationId: string
   if (isTauriRuntime()) {
     const { invoke } = await import('@tauri-apps/api/core');
     return invoke<ApiResponse>('send_request', { operationId, request });
+  }
+
+  if (request.digestAuth) {
+    throw new Error(t('Digest Auth requires the Tauri desktop runtime.'));
   }
 
   const started = performance.now();
@@ -197,6 +207,51 @@ export async function sendApiRequest(request: EngineRequest, operationId: string
     browserControllers.delete(operationId);
     window.clearTimeout(timeout);
   }
+}
+
+export async function refreshOAuthAccessToken(
+  oauth: Extract<AuthConfig, { type: 'oauth2' }>,
+  variables: Record<string, string>,
+  network: NetworkSettings,
+): Promise<Extract<AuthConfig, { type: 'oauth2' }>> {
+  if (!oauth.refreshToken || !oauth.tokenUrl) return oauth;
+  if (oauth.accessToken && (!oauth.expiresAt || oauth.expiresAt > Date.now() + 30_000)) return oauth;
+
+  const fields: EngineField[] = [
+    { key: 'grant_type', value: 'refresh_token' },
+    { key: 'refresh_token', value: interpolate(oauth.refreshToken, variables) },
+    { key: 'client_id', value: interpolate(oauth.clientId, variables) },
+  ];
+  const clientSecret = interpolate(oauth.clientSecret, variables);
+  if (clientSecret) fields.push({ key: 'client_secret', value: clientSecret });
+  const response = await sendApiRequest({
+    method: 'POST',
+    url: interpolate(oauth.tokenUrl, variables),
+    headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: { type: 'urlencoded', fields },
+    network,
+  }, `oauth-refresh-${crypto.randomUUID()}`);
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(response.body) as Record<string, unknown>;
+  } catch {
+    throw new Error(t('OAuth token endpoint did not return JSON.'));
+  }
+  if (response.status < 200 || response.status >= 300) {
+    const detail = typeof payload.error_description === 'string'
+      ? payload.error_description
+      : typeof payload.error === 'string' ? payload.error : `${response.status} ${response.statusText}`;
+    throw new Error(detail);
+  }
+  const accessToken = typeof payload.access_token === 'string' ? payload.access_token : '';
+  if (!accessToken) throw new Error(t('OAuth token response did not include access_token.'));
+  const expiresIn = typeof payload.expires_in === 'number' ? payload.expires_in : Number(payload.expires_in);
+  return {
+    ...oauth,
+    accessToken,
+    refreshToken: typeof payload.refresh_token === 'string' ? payload.refresh_token : oauth.refreshToken,
+    expiresAt: Number.isFinite(expiresIn) && expiresIn > 0 ? Date.now() + expiresIn * 1000 : null,
+  };
 }
 
 export async function cancelApiRequest(operationId: string) {
