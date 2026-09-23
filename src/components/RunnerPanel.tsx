@@ -3,7 +3,13 @@ import { useMemo, useRef, useState } from 'react';
 import { translate as t, useLocale } from '../i18n';
 import { makeHistoryEntry, saveHistory } from '../lib/history';
 import { createId } from '../lib/id';
-import { cancelApiRequest, sendApiRequest, toEngineRequest } from '../lib/request';
+import { cancelApiRequest, refreshOAuthAccessToken, sendApiRequest, toEngineRequest } from '../lib/request';
+import {
+  applyEnvironmentMutations,
+  applyHeaderMutations,
+  runRequestScript,
+  type ScriptTestResult,
+} from '../lib/scripts';
 import { getActiveEnvironmentValues, useAppStore } from '../store/appStore';
 
 type RunnerResult = {
@@ -15,6 +21,8 @@ type RunnerResult = {
   status: number | null;
   elapsedMs: number | null;
   error: string | null;
+  tests: ScriptTestResult[];
+  logs: string[];
 };
 
 const sleep = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -23,11 +31,12 @@ export function RunnerPanel() {
   useLocale();
   const collections = useAppStore((state) => state.collections);
   const requests = useAppStore((state) => state.requests);
-  const variables = useAppStore(getActiveEnvironmentValues);
+  const environmentProfiles = useAppStore((state) => state.environmentProfiles);
   const networkSettings = useAppStore((state) => state.networkSettings);
   const prependHistory = useAppStore((state) => state.prependHistory);
 
   const [collectionId, setCollectionId] = useState(collections[0]?.id ?? '');
+  const [environmentId, setEnvironmentId] = useState(() => useAppStore.getState().activeEnvironmentId);
   const [iterations, setIterations] = useState(1);
   const [delayMs, setDelayMs] = useState(0);
   const [stopOnError, setStopOnError] = useState(true);
@@ -61,49 +70,83 @@ export function RunnerPanel() {
     cancelledRef.current = false;
     setRunning(true);
     setResults([]);
+    const runVariables = { ...getActiveEnvironmentValues({ environmentProfiles, activeEnvironmentId: environmentId }) };
 
     try {
       outer:
       for (let iteration = 1; iteration <= Math.max(1, iterations); iteration += 1) {
         for (const request of queue) {
           if (cancelledRef.current) break outer;
-          const operationId = createId('runner-op');
-          operationIdRef.current = operationId;
+
+          let responseStatus: number | null = null;
+          let responseElapsed: number | null = null;
+          let scriptTests: ScriptTestResult[] = [];
+          let scriptLogs: string[] = [];
+          let errorMessage: string | null = null;
 
           try {
-            const engineRequest = toEngineRequest(request, variables, networkSettings);
+            const preScript = await runRequestScript(
+              'preRequest',
+              request.preRequestScript ?? '',
+              runVariables,
+              request,
+            );
+            applyEnvironmentMutations(runVariables, preScript.environment);
+            scriptTests = [...scriptTests, ...preScript.tests];
+            scriptLogs = [...scriptLogs, ...preScript.logs];
+
+            const requestToSend = request.auth.type === 'oauth2'
+              ? { ...request, auth: await refreshOAuthAccessToken(request.auth, runVariables, networkSettings) }
+              : request;
+            const engineRequest = toEngineRequest(requestToSend, runVariables, networkSettings);
+            applyHeaderMutations(engineRequest.headers, preScript.headers);
+
+            const operationId = createId('runner-op');
+            operationIdRef.current = operationId;
             const response = await sendApiRequest(engineRequest, operationId);
+            operationIdRef.current = null;
+            responseStatus = response.status;
+            responseElapsed = response.elapsedMs;
+
             const historyEntry = makeHistoryEntry(request, engineRequest, response);
             prependHistory(historyEntry);
             void saveHistory(historyEntry).catch(() => undefined);
-            setResults((current) => [...current, {
-              id: createId('runner-result'),
-              iteration,
-              requestId: request.id,
-              requestName: request.name,
-              method: request.method,
-              status: response.status,
-              elapsedMs: response.elapsedMs,
-              error: null,
-            }]);
+
+            const testScript = await runRequestScript(
+              'test',
+              request.testScript ?? '',
+              runVariables,
+              engineRequest,
+              response,
+            );
+            applyEnvironmentMutations(runVariables, testScript.environment);
+            scriptTests = [...scriptTests, ...testScript.tests];
+            scriptLogs = [...scriptLogs, ...testScript.logs];
           } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            setResults((current) => [...current, {
-              id: createId('runner-result'),
-              iteration,
-              requestId: request.id,
-              requestName: request.name,
-              method: request.method,
-              status: null,
-              elapsedMs: null,
-              error: message,
-            }]);
-            if (cancelledRef.current || stopOnError) break outer;
+            errorMessage = error instanceof Error ? error.message : String(error);
           } finally {
             operationIdRef.current = null;
           }
 
-          if (delayMs > 0 && !cancelledRef.current) await sleep(delayMs);
+          const failedTests = scriptTests.filter((test) => !test.passed);
+          setResults((current) => [...current, {
+            id: createId('runner-result'),
+            iteration,
+            requestId: request.id,
+            requestName: request.name,
+            method: request.method,
+            status: responseStatus,
+            elapsedMs: responseElapsed,
+            error: errorMessage,
+            tests: scriptTests,
+            logs: scriptLogs,
+          }]);
+
+          if (cancelledRef.current || (stopOnError && (errorMessage !== null || failedTests.length > 0))) {
+            break outer;
+          }
+
+          if (delayMs > 0) await sleep(delayMs);
         }
       }
     } finally {
@@ -143,6 +186,12 @@ export function RunnerPanel() {
           </select>
         </label>
         <label>
+          <span>{t('Environment')}</span>
+          <select value={environmentId} disabled={running} onChange={(event) => setEnvironmentId(event.target.value)}>
+            {environmentProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+          </select>
+        </label>
+        <label>
           <span>{t('Iterations')}</span>
           <input type="number" min={1} max={1000} disabled={running} value={iterations} onChange={(event) => setIterations(Math.max(1, Number(event.target.value) || 1))} />
         </label>
@@ -152,14 +201,14 @@ export function RunnerPanel() {
         </label>
         <label className="runner-toggle">
           <input type="checkbox" checked={stopOnError} disabled={running} onChange={(event) => setStopOnError(event.target.checked)} />
-          <span>{t('Stop on request error')}</span>
+          <span>{t('Stop on request or test failure')}</span>
         </label>
       </div>
 
       <div className="runner-summary">
         <strong>{collection?.name ?? t('Collection')}</strong>
         <span>{t('{count} requests per iteration', { count: queue.length })}</span>
-        <span>{t('Pre-request and test scripts are saved but not executed until the sandbox runtime is enabled.')}</span>
+        <span>{t('Scripts run in an isolated Rust JavaScript sandbox; environment changes are scoped to this run.')}</span>
       </div>
 
       <div className="runner-results">
@@ -175,18 +224,38 @@ export function RunnerPanel() {
             <strong>{t('No runner results yet')}</strong>
             <span>{t('Choose a collection and start a run.')}</span>
           </div>
-        ) : results.map((result) => (
-          <div className={`runner-result-row ${result.error ? 'error' : ''}`} key={result.id}>
-            <span>{result.iteration}</span>
-            <span className={`method method-${result.method.toLowerCase()}`}>{result.method}</span>
-            <span title={result.error ?? result.requestName}>
-              <strong>{result.requestName}</strong>
-              {result.error && <small>{result.error}</small>}
-            </span>
-            <span>{result.status ?? '—'}</span>
-            <span>{result.elapsedMs === null ? '—' : `${result.elapsedMs} ms`}</span>
-          </div>
-        ))}
+        ) : results.map((result) => {
+          const failedTests = result.tests.filter((test) => !test.passed);
+          const rowFailed = Boolean(result.error) || failedTests.length > 0;
+          const detail = result.error
+            ?? (failedTests.length
+              ? failedTests.map((test) => `${test.name}: ${test.message || t('Failed')}`).join('\n')
+              : result.logs.join('\n'));
+
+          return (
+            <div className={`runner-result-row ${rowFailed ? 'error' : ''}`} key={result.id}>
+              <span>{result.iteration}</span>
+              <span className={`method method-${result.method.toLowerCase()}`}>{result.method}</span>
+              <span title={detail || result.requestName}>
+                <strong>{result.requestName}</strong>
+                {result.error && <small>{result.error}</small>}
+                {!result.error && result.tests.length > 0 && (
+                  <small className={failedTests.length ? '' : 'runner-tests-passed'}>
+                    {t('{passed}/{total} tests passed', {
+                      passed: result.tests.length - failedTests.length,
+                      total: result.tests.length,
+                    })}
+                  </small>
+                )}
+                {!result.error && result.tests.length === 0 && result.logs.length > 0 && (
+                  <small className="runner-log-summary">{t('{count} script logs', { count: result.logs.length })}</small>
+                )}
+              </span>
+              <span>{result.status ?? '—'}</span>
+              <span>{result.elapsedMs === null ? '—' : `${result.elapsedMs} ms`}</span>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

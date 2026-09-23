@@ -48,6 +48,8 @@
 .runner-result-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .runner-result-row strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; color: #d1d6df; }
 .runner-result-row small { display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c8797e; font-size: 8.5px; }
+.runner-result-row small.runner-tests-passed { color: #70b48b; }
+.runner-result-row small.runner-log-summary { color: #77889f; }
 @media (max-width: 1080px) {
   .runner-config { grid-template-columns: 1fr 110px 120px; }
   .runner-toggle { grid-column: 1 / -1; align-self: start; }

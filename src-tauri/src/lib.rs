@@ -9,13 +9,12 @@ use std::{
 
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64_STANDARD};
 use reqwest::{
-    Client, Method, Proxy,
-    header::{HeaderMap, HeaderName, HeaderValue},
+    Client, Identity, Method, Proxy, RequestBuilder, Response,
+    header::{HeaderMap, HeaderName, HeaderValue, WWW_AUTHENTICATE},
     multipart,
     redirect::Policy,
 };
 use reqwest_cookie_store::{CookieStore, CookieStoreMutex};
-use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use tauri::{Manager, State};
 use thiserror::Error;
@@ -24,7 +23,15 @@ use tokio_util::sync::CancellationToken;
 mod sse;
 use sse::start_sse;
 
-#[derive(Debug, Deserialize)]
+mod history;
+use history::{Database, clear_history, list_history, save_history};
+
+mod digest;
+
+mod script;
+use script::run_script;
+
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct EngineRequest {
     method: String,
@@ -32,9 +39,10 @@ pub(crate) struct EngineRequest {
     headers: HashMap<String, String>,
     body: EngineBody,
     network: NetworkSettings,
+    digest_auth: Option<DigestCredentials>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 enum EngineBody {
     None,
@@ -43,14 +51,14 @@ enum EngineBody {
     Multipart { fields: Vec<EngineMultipartField> },
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct EngineField {
     key: String,
     value: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct EngineMultipartField {
     key: String,
@@ -60,7 +68,7 @@ struct EngineMultipartField {
     file_name: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct NetworkSettings {
     timeout_ms: u64,
@@ -69,6 +77,19 @@ struct NetworkSettings {
     cookies_enabled: bool,
     use_system_proxy: bool,
     proxy_url: String,
+    proxy_username: String,
+    proxy_password: String,
+    client_certificate_type: String,
+    client_certificate_path: String,
+    client_key_path: String,
+    client_certificate_password: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DigestCredentials {
+    username: String,
+    password: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -93,27 +114,6 @@ struct CookieInfo {
     secure: bool,
     http_only: bool,
     expires: Option<String>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct HistoryEntry {
-    id: String,
-    request_id: String,
-    request_name: String,
-    method: String,
-    url: String,
-    status: u16,
-    status_text: String,
-    elapsed_ms: u128,
-    size_bytes: usize,
-    request_json: String,
-    response_json: String,
-    created_at: String,
-}
-
-struct Database {
-    connection: Mutex<Connection>,
 }
 
 pub(crate) struct HttpState {
@@ -189,6 +189,8 @@ enum AppError {
     CookiePersistence(String),
     #[error("request cancellation lock is poisoned")]
     CancellationLock,
+    #[error("authentication error: {0}")]
+    Authentication(String),
 }
 
 impl Serialize for AppError {
@@ -200,34 +202,115 @@ impl Serialize for AppError {
     }
 }
 
-impl Database {
-    fn open(app: &tauri::App) -> Result<Self, AppError> {
-        let data_dir = app.path().app_data_dir()?;
-        fs::create_dir_all(&data_dir)?;
-        let connection = Connection::open(data_dir.join("apiforge.sqlite3"))?;
-        connection.execute_batch(
-            "PRAGMA journal_mode = WAL;
-             PRAGMA foreign_keys = ON;
-             CREATE TABLE IF NOT EXISTS history (
-                id TEXT PRIMARY KEY,
-                request_id TEXT NOT NULL,
-                request_name TEXT NOT NULL,
-                method TEXT NOT NULL,
-                url TEXT NOT NULL,
-                status INTEGER NOT NULL,
-                status_text TEXT NOT NULL,
-                elapsed_ms INTEGER NOT NULL,
-                size_bytes INTEGER NOT NULL,
-                request_json TEXT NOT NULL,
-                response_json TEXT NOT NULL,
-                created_at TEXT NOT NULL
-             );
-             CREATE INDEX IF NOT EXISTS idx_history_created_at ON history(created_at DESC);",
-        )?;
-        Ok(Self {
-            connection: Mutex::new(connection),
-        })
+async fn apply_body(
+    builder: RequestBuilder,
+    body: &EngineBody,
+) -> Result<RequestBuilder, AppError> {
+    Ok(match body {
+        EngineBody::None => builder,
+        EngineBody::Text { content } => builder.body(content.clone()),
+        EngineBody::Urlencoded { fields } => {
+            let pairs = fields
+                .iter()
+                .map(|field| (field.key.clone(), field.value.clone()))
+                .collect::<Vec<_>>();
+            builder.form(&pairs)
+        }
+        EngineBody::Multipart { fields } => {
+            let mut form = multipart::Form::new();
+            for field in fields {
+                if field.kind == "file" {
+                    if !field.value.trim().is_empty() {
+                        let mut part = multipart::Part::file(&field.value).await?;
+                        if let Some(file_name) =
+                            field.file_name.as_ref().filter(|name| !name.is_empty())
+                        {
+                            part = part.file_name(file_name.clone());
+                        }
+                        form = form.part(field.key.clone(), part);
+                    }
+                } else {
+                    form = form.text(field.key.clone(), field.value.clone());
+                }
+            }
+            builder.multipart(form)
+        }
+    })
+}
+
+fn load_client_identity(network: &NetworkSettings) -> Result<Option<Identity>, AppError> {
+    let certificate_path = network.client_certificate_path.trim();
+    match network.client_certificate_type.as_str() {
+        "none" | "" => Ok(None),
+        "pkcs12" => {
+            let bytes = fs::read(certificate_path)?;
+            Identity::from_pkcs12_der(&bytes, &network.client_certificate_password)
+                .map(Some)
+                .map_err(AppError::Http)
+        }
+        "pem" => {
+            let mut pem = fs::read(certificate_path)?;
+            let key_path = network.client_key_path.trim();
+            if !key_path.is_empty() {
+                pem.extend_from_slice(b"\n");
+                pem.extend_from_slice(&fs::read(key_path)?);
+            }
+            Identity::from_pem(&pem).map(Some).map_err(AppError::Http)
+        }
+        other => Err(AppError::Authentication(format!(
+            "unsupported client certificate type: {other}"
+        ))),
     }
+}
+
+async fn send_with_optional_digest(
+    client: &Client,
+    method: &Method,
+    url: &str,
+    headers: &HeaderMap,
+    body: &EngineBody,
+    credentials: Option<&DigestCredentials>,
+) -> Result<Response, AppError> {
+    let first = apply_body(
+        client.request(method.clone(), url).headers(headers.clone()),
+        body,
+    )
+    .await?;
+    let response = first.send().await?;
+    let Some(credentials) = credentials else {
+        return Ok(response);
+    };
+    if response.status() != reqwest::StatusCode::UNAUTHORIZED {
+        return Ok(response);
+    }
+    let Some(challenge) = response
+        .headers()
+        .get(WWW_AUTHENTICATE)
+        .and_then(|value| value.to_str().ok())
+    else {
+        return Ok(response);
+    };
+    if !challenge
+        .trim_start()
+        .to_ascii_lowercase()
+        .starts_with("digest ")
+    {
+        return Ok(response);
+    }
+    let authorization = digest::authorization_header(
+        challenge,
+        method.as_str(),
+        url,
+        &credentials.username,
+        &credentials.password,
+    )
+    .map_err(AppError::Authentication)?;
+    drop(response);
+    let second = client
+        .request(method.clone(), url)
+        .headers(headers.clone())
+        .header(reqwest::header::AUTHORIZATION, authorization);
+    Ok(apply_body(second, body).await?.send().await?)
 }
 
 async fn execute_request(
@@ -239,7 +322,7 @@ async fn execute_request(
         .map_err(|_| AppError::InvalidMethod(request.method.clone()))?;
 
     let mut headers = HeaderMap::new();
-    for (name, value) in request.headers {
+    for (name, value) in &request.headers {
         let header_name = HeaderName::from_bytes(name.as_bytes())
             .map_err(|_| AppError::InvalidHeaderName(name.clone()))?;
         let header_value = HeaderValue::from_str(&value)
@@ -263,41 +346,36 @@ async fn execute_request(
 
     let proxy_url = request.network.proxy_url.trim();
     if !proxy_url.is_empty() {
-        client_builder = client_builder.proxy(Proxy::all(proxy_url)?);
+        let mut proxy = Proxy::all(proxy_url)?;
+        if !request.network.proxy_username.is_empty() {
+            proxy = proxy.basic_auth(
+                &request.network.proxy_username,
+                &request.network.proxy_password,
+            );
+        }
+        client_builder = client_builder.proxy(proxy);
     } else if !request.network.use_system_proxy {
         client_builder = client_builder.no_proxy();
     }
 
+    if request.network.client_certificate_type == "pkcs12" {
+        client_builder = client_builder.use_native_tls();
+    }
+    if let Some(identity) = load_client_identity(&request.network)? {
+        client_builder = client_builder.identity(identity);
+    }
+
     let client = client_builder.build()?;
     let started = Instant::now();
-    let mut builder = client.request(method, &request.url).headers(headers);
-
-    builder = match request.body {
-        EngineBody::None => builder,
-        EngineBody::Text { content } => builder.body(content),
-        EngineBody::Urlencoded { fields } => {
-            let pairs = fields
-                .into_iter()
-                .map(|field| (field.key, field.value))
-                .collect::<Vec<_>>();
-            builder.form(&pairs)
-        }
-        EngineBody::Multipart { fields } => {
-            let mut form = multipart::Form::new();
-            for field in fields {
-                if field.kind == "file" {
-                    if !field.value.trim().is_empty() {
-                        form = form.file(field.key, field.value).await?;
-                    }
-                } else {
-                    form = form.text(field.key, field.value);
-                }
-            }
-            builder.multipart(form)
-        }
-    };
-
-    let response = builder.send().await?;
+    let response = send_with_optional_digest(
+        &client,
+        &method,
+        &request.url,
+        &headers,
+        &request.body,
+        request.digest_auth.as_ref(),
+    )
+    .await?;
     let status = response.status();
     let response_headers = response
         .headers()
@@ -435,95 +513,17 @@ fn remove_cookie(
     persist_cookie_store(&store, &http_state.cookie_path)
 }
 
-#[tauri::command]
-fn save_history(entry: HistoryEntry, database: State<'_, Database>) -> Result<(), AppError> {
-    let connection = database
-        .connection
-        .lock()
-        .map_err(|_| AppError::DatabaseLock)?;
-    connection.execute(
-        "INSERT OR REPLACE INTO history (
-            id, request_id, request_name, method, url, status, status_text,
-            elapsed_ms, size_bytes, request_json, response_json, created_at
-         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
-        params![
-            entry.id,
-            entry.request_id,
-            entry.request_name,
-            entry.method,
-            entry.url,
-            entry.status,
-            entry.status_text,
-            entry.elapsed_ms as i64,
-            entry.size_bytes as i64,
-            entry.request_json,
-            entry.response_json,
-            entry.created_at,
-        ],
-    )?;
-    connection.execute(
-        "DELETE FROM history WHERE id NOT IN (
-            SELECT id FROM history ORDER BY created_at DESC LIMIT 500
-         )",
-        [],
-    )?;
-    Ok(())
-}
-
-#[tauri::command]
-fn list_history(
-    limit: Option<u32>,
-    database: State<'_, Database>,
-) -> Result<Vec<HistoryEntry>, AppError> {
-    let connection = database
-        .connection
-        .lock()
-        .map_err(|_| AppError::DatabaseLock)?;
-    let limit = limit.unwrap_or(200).clamp(1, 500);
-    let limit_i64 = limit as i64;
-    let mut statement = connection.prepare(
-        "SELECT id, request_id, request_name, method, url, status, status_text,
-                elapsed_ms, size_bytes, request_json, response_json, created_at
-         FROM history
-         ORDER BY created_at DESC
-         LIMIT ?1",
-    )?;
-
-    let rows = statement.query_map([limit_i64], |row| {
-        Ok(HistoryEntry {
-            id: row.get(0)?,
-            request_id: row.get(1)?,
-            request_name: row.get(2)?,
-            method: row.get(3)?,
-            url: row.get(4)?,
-            status: row.get(5)?,
-            status_text: row.get(6)?,
-            elapsed_ms: row.get::<_, i64>(7)? as u128,
-            size_bytes: row.get::<_, i64>(8)? as usize,
-            request_json: row.get(9)?,
-            response_json: row.get(10)?,
-            created_at: row.get(11)?,
-        })
-    })?;
-
-    rows.collect::<Result<Vec<_>, _>>().map_err(AppError::from)
-}
-
-#[tauri::command]
-fn clear_history(database: State<'_, Database>) -> Result<(), AppError> {
-    let connection = database
-        .connection
-        .lock()
-        .map_err(|_| AppError::DatabaseLock)?;
-    connection.execute("DELETE FROM history", [])?;
-    Ok(())
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            let local_data_dir = app.path().app_local_data_dir()?;
+            fs::create_dir_all(&local_data_dir)?;
+            let stronghold_salt = local_data_dir.join("stronghold-salt.bin");
+            app.handle()
+                .plugin(tauri_plugin_stronghold::Builder::with_argon2(&stronghold_salt).build())?;
+
             let database = Database::open(app)?;
             app.manage(database);
             app.manage(HttpState::open(app)?);
@@ -538,12 +538,12 @@ pub fn run() {
             save_history,
             list_history,
             clear_history,
-            start_sse
+            start_sse,
+            run_script
         ])
         .run(tauri::generate_context!())
         .expect("error while running ApiForge");
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -561,7 +561,10 @@ mod tests {
             "application/x-www-form-urlencoded",
             "image/svg+xml",
         ] {
-            assert!(is_textual_content_type(content_type), "expected textual: {content_type}");
+            assert!(
+                is_textual_content_type(content_type),
+                "expected textual: {content_type}"
+            );
         }
     }
 
@@ -575,7 +578,10 @@ mod tests {
             "audio/mpeg",
             "video/mp4",
         ] {
-            assert!(!is_textual_content_type(content_type), "expected binary: {content_type}");
+            assert!(
+                !is_textual_content_type(content_type),
+                "expected binary: {content_type}"
+            );
         }
     }
 }

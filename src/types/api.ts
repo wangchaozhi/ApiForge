@@ -18,17 +18,21 @@ export type AuthConfig =
   | { type: 'none' }
   | { type: 'bearer'; token: string }
   | { type: 'basic'; username: string; password: string }
+  | { type: 'digest'; username: string; password: string }
   | { type: 'apiKey'; key: string; value: string; addTo: 'header' | 'query' }
   | {
       type: 'oauth2';
       flow: 'authorization-code' | 'client-credentials';
       authorizationUrl: string;
       tokenUrl: string;
+      redirectUri: string;
       clientId: string;
       clientSecret: string;
       scopes: string;
       usePkce: boolean;
       accessToken: string;
+      refreshToken: string;
+      expiresAt: number | null;
     };
 
 export type NetworkSettings = {
@@ -38,6 +42,12 @@ export type NetworkSettings = {
   cookiesEnabled: boolean;
   useSystemProxy: boolean;
   proxyUrl: string;
+  proxyUsername: string;
+  proxyPassword: string;
+  clientCertificateType: 'none' | 'pkcs12' | 'pem';
+  clientCertificatePath: string;
+  clientKeyPath: string;
+  clientCertificatePassword: string;
 };
 
 export type EnvironmentVariable = {
@@ -95,6 +105,7 @@ export type EngineRequest = {
   headers: Record<string, string>;
   body: EngineBody;
   network: NetworkSettings;
+  digestAuth?: { username: string; password: string };
 };
 
 export type ApiResponse = {

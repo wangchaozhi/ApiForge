@@ -10,12 +10,19 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 use tokio_util::sync::CancellationToken;
 
-use super::{AppError, EngineRequest, HttpState, persist_cookie_store};
+use super::{
+    AppError, EngineRequest, HttpState, load_client_identity, persist_cookie_store,
+    send_with_optional_digest,
+};
 
 const SSE_EVENT_NAME: &str = "apiforge://sse";
 
 #[derive(Clone, Serialize)]
-#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 enum SseNativeEvent {
     Opened {
         operation_id: String,
@@ -43,7 +50,7 @@ async fn stream_sse(
         .map_err(|_| AppError::InvalidMethod(request.method.clone()))?;
 
     let mut headers = HeaderMap::new();
-    for (name, value) in request.headers {
+    for (name, value) in &request.headers {
         let header_name = HeaderName::from_bytes(name.as_bytes())
             .map_err(|_| AppError::InvalidHeaderName(name.clone()))?;
         let header_value = HeaderValue::from_str(&value)
@@ -68,15 +75,36 @@ async fn stream_sse(
 
     let proxy_url = request.network.proxy_url.trim();
     if !proxy_url.is_empty() {
-        client_builder = client_builder.proxy(Proxy::all(proxy_url)?);
+        let mut proxy = Proxy::all(proxy_url)?;
+        if !request.network.proxy_username.is_empty() {
+            proxy = proxy.basic_auth(
+                &request.network.proxy_username,
+                &request.network.proxy_password,
+            );
+        }
+        client_builder = client_builder.proxy(proxy);
     } else if !request.network.use_system_proxy {
         client_builder = client_builder.no_proxy();
+    }
+
+    if request.network.client_certificate_type == "pkcs12" {
+        client_builder = client_builder.use_native_tls();
+    }
+    if let Some(identity) = load_client_identity(&request.network)? {
+        client_builder = client_builder.identity(identity);
     }
 
     let client = client_builder.build()?;
     let mut response = tokio::select! {
         _ = token.cancelled() => return Err(AppError::Cancelled),
-        response = client.request(method, &request.url).headers(headers).send() => response?,
+        response = send_with_optional_digest(
+            &client,
+            &method,
+            &request.url,
+            &headers,
+            &request.body,
+            request.digest_auth.as_ref(),
+        ) => response?,
     };
 
     let status = response.status();
