@@ -15,7 +15,7 @@ use super::{AppError, EngineRequest, HttpState, persist_cookie_store};
 const SSE_EVENT_NAME: &str = "apiforge://sse";
 
 #[derive(Clone, Serialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
 enum SseNativeEvent {
     Opened {
         operation_id: String,
