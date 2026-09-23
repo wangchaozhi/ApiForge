@@ -219,7 +219,18 @@ export const zhCN = {
   "Scripts run in an isolated Rust JavaScript sandbox; environment changes are scoped to this run.": "脚本在隔离的 Rust JavaScript 沙箱中运行；环境变量修改仅在本次运行中生效。",
   "Failed": "失败",
   "{passed}/{total} tests passed": "{passed}/{total} 个测试通过",
-  "{count} script logs": "{count} 条脚本日志"
+  "{count} script logs": "{count} 条脚本日志",
+  "Secret vault unlocked": "敏感信息保险库已解锁",
+  "Secret vault locked": "敏感信息保险库已锁定",
+  "Secret vault unlocked.": "敏感信息保险库已解锁。",
+  "Secret vault locked.": "敏感信息保险库已锁定。",
+  "Secret values are encrypted with Stronghold and never written to workspace storage.": "敏感值通过 Stronghold 加密，且不会写入工作区存储。",
+  "Master password": "主密码",
+  "Unlock secrets": "解锁敏感信息",
+  "Lock secrets": "锁定敏感信息",
+  "Unlock to edit": "解锁后编辑",
+  "Unlock the secret vault before editing secrets.": "请先解锁敏感信息保险库再编辑敏感值。",
+  "Unlock the secret vault before deleting this environment.": "请先解锁敏感信息保险库再删除此环境。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;
