@@ -1,5 +1,6 @@
 import { redactAuthSecrets } from './auth';
 import { createId } from './id';
+import { migrateWorkspaceSnapshot } from './migrations';
 import type {
   ApiCollection,
   ApiRequest,
@@ -100,7 +101,7 @@ export function serializeWorkspace(data: WorkspaceData, includeSecrets = false) 
 }
 
 export function parseWorkspace(source: string): WorkspaceSnapshotV1 {
-  const value = json(source);
+  const value = migrateWorkspaceSnapshot(json(source)) as JsonRecord;
   if (value.schema !== 'apiforge.workspace' || value.schemaVersion !== 1 || !value.data) {
     throw new Error('Unsupported ApiForge workspace format.');
   }
