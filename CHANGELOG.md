@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Refactor frontend into domain contracts, transport/import services, typed store slices, feature UI and shared components.
+- Split native IPC commands, HTTP execution, cookies, database, state and models into dedicated Rust modules.
+- Organize styles by feature while preserving the cascade, and add module-boundary and behavior regression checks.
+
 - Quote shell-sensitive URL and body characters in exported cURL commands.
 
 - Preserve repeated query parameters and existing URL query values when sending requests.

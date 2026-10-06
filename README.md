@@ -118,6 +118,9 @@ cargo check
 
 ## Architecture
 
+See [Module architecture](docs/ARCHITECTURE.md) for module ownership, dependency
+boundaries, persistence compatibility and validation commands.
+
 ```text
 React + TypeScript
   ├─ Collection / Folder tree
