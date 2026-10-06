@@ -1,0 +1,16 @@
+.dialog-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(4,5,8,.68); backdrop-filter: blur(2px); }
+.dialog-card { width: min(720px, calc(100vw - 80px)); background: #171a21; border: 1px solid #343945; border-radius: 12px; box-shadow: 0 24px 80px rgba(0,0,0,.45); overflow: hidden; }
+.dialog-title { min-height: 62px; padding: 13px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.dialog-title strong { display: block; font-size: 13px; }
+.dialog-title span { color: var(--muted); display: block; font-size: 10px; margin-top: 4px; }
+.curl-editor { width: 100%; min-height: 260px; border: 0; border-bottom: 1px solid var(--border); resize: vertical; outline: 0; background: #0f1116; color: #d8dce5; padding: 15px 17px; font: 11.5px/1.6 "SFMono-Regular", Consolas, monospace; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 15px; }
+.primary-button, .secondary-button { min-height: 34px; border-radius: 7px; padding: 0 12px; display: inline-flex; gap: 6px; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; font-weight: 700; }
+.primary-button { border: 0; background: var(--accent); color: #18120f; }
+.primary-button:hover { background: var(--accent-strong); }
+.primary-button:disabled, .secondary-button:disabled { opacity: .45; cursor: default; }
+.secondary-button { border: 1px solid #333844; background: #1b1e25; color: #b5bbc7; }
+.secondary-button:hover:not(:disabled) { background: #22262e; color: var(--text); }
+.compact { min-height: 30px; padding: 0 9px; font-size: 10px; }
+.dialog-toast { position: fixed; z-index: 60; left: 50%; bottom: 28px; transform: translateX(-50%); border-radius: 8px; padding: 9px 12px; font-size: 11px; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+.dialog-toast.error { background: #351b20; color: #ff9ea8; border: 1px solid #63303a; }

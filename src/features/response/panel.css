@@ -1,0 +1,13 @@
+.response-panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.response-heading { height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; border-bottom: 1px solid var(--border-soft); }
+.response-heading strong { font-size: 13px; }
+.response-meta { display: flex; gap: 14px; color: var(--muted); font-size: 11px; }
+.status-ok { color: var(--green); font-weight: 750; } .status-bad { color: var(--red); font-weight: 750; }
+.response-empty { flex: 1; display: flex; flex-direction: column; gap: 7px; align-items: center; justify-content: center; color: #7a8290; }
+.response-empty strong { color: #a7adba; font-size: 12px; }
+.response-empty span { font-size: 10px; }
+.empty-icon { width: 42px; height: 42px; border: 1px solid var(--border); border-radius: 11px; display: grid; place-items: center; color: #7a8392; background: #171a20; }
+.response-error { margin: 18px; border: 1px solid rgba(255,107,107,.25); background: rgba(255,107,107,.055); padding: 14px; border-radius: 9px; display: flex; gap: 10px; color: #ff9696; }
+.response-error strong { font-size: 12px; }
+.response-error p { color: #c9a1a1; font: 11px/1.5 "SFMono-Regular", Consolas, monospace; word-break: break-word; }
+.response-error small { color: #8e858b; font-size: 10px; }

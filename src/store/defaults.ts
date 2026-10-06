@@ -1,9 +1,8 @@
 import { translate as t } from '../i18n/index.ts';
 import { createId } from '../lib/id.ts';
-import type { ApiCollection, WorkspaceView } from '../domain/workspace.ts';
+import type { ApiCollection } from '../domain/workspace.ts';
 import type { ApiRequest, KeyValue, MultipartField } from '../domain/request.ts';
-import type { ApiResponse, RequestRuntime } from '../domain/response.ts';
-import type { HistoryEntry } from '../domain/history.ts';
+import type { RequestRuntime } from '../domain/response.ts';
 import type { NetworkSettings } from '../domain/network.ts';
 
 export const emptyRow = (): KeyValue => ({ id: createId('kv'), key: '', value: '', enabled: true });
@@ -53,29 +52,29 @@ export function normalizeRequest(request: ApiRequest): ApiRequest {
 
 
 export function createStarterWorkspace() {
-const starterRequest: ApiRequest = {
-  id: createId('req'),
-  name: t("Get JSONPlaceholder post"),
-  method: 'GET',
-  url: 'https://jsonplaceholder.typicode.com/posts/1',
-  params: [emptyRow()],
-  headers: [
-    { id: createId('kv'), key: 'Accept', value: 'application/json', enabled: true },
-    emptyRow(),
-  ],
-  bodyType: 'none',
-  body: '{\n  "hello": "{{name}}"\n}',
-  formFields: [emptyRow()],
-  multipartFields: [emptyMultipartRow()],
-  auth: { type: 'none' },
-};
+  const starterRequest: ApiRequest = {
+    id: createId('req'),
+    name: t("Get JSONPlaceholder post"),
+    method: 'GET',
+    url: 'https://jsonplaceholder.typicode.com/posts/1',
+    params: [emptyRow()],
+    headers: [
+      { id: createId('kv'), key: 'Accept', value: 'application/json', enabled: true },
+      emptyRow(),
+    ],
+    bodyType: 'none',
+    body: '{\n  "hello": "{{name}}"\n}',
+    formFields: [emptyRow()],
+    multipartFields: [emptyMultipartRow()],
+    auth: { type: 'none' },
+  };
 
-const starterCollection: ApiCollection = {
-  id: createId('col'),
-  name: t("My Collection"),
-  requestIds: [starterRequest.id],
-  folders: [],
-};
+  const starterCollection: ApiCollection = {
+    id: createId('col'),
+    name: t("My Collection"),
+    requestIds: [starterRequest.id],
+    folders: [],
+  };
 
   return { starterRequest, starterCollection };
 }

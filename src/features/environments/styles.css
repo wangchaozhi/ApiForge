@@ -1,0 +1,7 @@
+.environment-table { margin: 18px; border: 1px solid var(--border); border-radius: 9px; overflow: auto; }
+.environment-row { min-height: 41px; display: grid; grid-template-columns: minmax(180px, .7fr) minmax(260px, 1.3fr) 42px; border-bottom: 1px solid var(--border-soft); align-items: center; }
+.environment-row:last-child { border-bottom: 0; }
+.environment-row.head { min-height: 34px; background: #181b22; color: #747d8c; font-size: 9px; text-transform: uppercase; letter-spacing: .7px; }
+.environment-row.head span { padding: 0 10px; }
+.environment-row input { height: 40px; border: 0; border-right: 1px solid var(--border-soft); outline: 0; padding: 0 10px; background: transparent; color: #d1d5de; font: 11px "SFMono-Regular", Consolas, monospace; }
+.environment-row input:focus { background: #12151b; box-shadow: inset 0 0 0 1px #485162; }

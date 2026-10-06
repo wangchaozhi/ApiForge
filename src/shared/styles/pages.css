@@ -1,0 +1,6 @@
+.page-header { height: 62px; flex: 0 0 62px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 18px; background: #15171d; }
+.page-header strong { display: block; font-size: 14px; }
+.page-header span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+.history-page, .environment-page { min-height: calc(100vh - 49px); max-height: calc(100vh - 49px); display: flex; flex-direction: column; background: var(--panel); overflow: hidden; }
+.page-empty { flex: 1; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; color: #777f8e; font-size: 11px; }
+.page-empty strong { color: #aeb4c0; }

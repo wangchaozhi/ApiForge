@@ -1,0 +1,16 @@
+.tabs { height: 37px; display: flex; align-items: flex-end; gap: 20px; padding: 0 18px; border-bottom: 1px solid var(--border-soft); }
+.tabs button { height: 37px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); padding: 0 1px; cursor: pointer; font-size: 12px; display: flex; gap: 6px; align-items: center; }
+.tabs button span { background: #232731; border-radius: 99px; padding: 1px 5px; font-size: 9px; }
+.tabs button.active { color: var(--text); border-bottom-color: var(--accent); }
+.tab-content { flex: 1; overflow: auto; padding: 11px 18px 16px; }
+.kv-head, .kv-row { display: grid; grid-template-columns: 28px minmax(120px, 1fr) minmax(160px, 1.4fr) 34px; }
+.kv-head { color: #737b89; font-size: 10px; padding-bottom: 5px; text-transform: uppercase; letter-spacing: .7px; }
+.kv-row { min-height: 35px; border-top: 1px solid var(--border-soft); }
+.kv-row:last-of-type { border-bottom: 1px solid var(--border-soft); }
+.kv-row input:not(.check) { border: 0; border-right: 1px solid var(--border-soft); background: transparent; color: #d8dbe2; padding: 0 8px; outline: 0; font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; }
+.check { align-self: center; justify-self: center; accent-color: var(--accent); }
+.icon-button { border: 0; cursor: pointer; display: grid; place-items: center; }
+.ghost { background: transparent; color: #697181; }
+.ghost:hover { color: var(--red); }
+.add-row { margin-top: 9px; background: transparent; border: 0; color: #8992a1; font-size: 11px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.add-row:hover { color: var(--text); }

@@ -1,0 +1,3 @@
+.body-type-row { flex-wrap: wrap; }
+.monaco-editor-shell { width: 100%; min-height: 150px; border: 1px solid var(--border-soft); border-radius: 7px; overflow: hidden; background: #111319; }
+.monaco-editor-shell .monaco-editor, .monaco-editor-shell .overflow-guard { border-radius: 7px; }

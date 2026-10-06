@@ -1,0 +1,18 @@
+.history-layout { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(480px, 1.35fr) minmax(320px, .65fr); }
+.history-list { overflow: auto; border-right: 1px solid var(--border); }
+.history-row { width: 100%; min-height: 64px; border: 0; border-bottom: 1px solid var(--border-soft); background: transparent; display: grid; grid-template-columns: 52px minmax(0, 1fr) 45px 142px; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; text-align: left; }
+.history-row:hover { background: #191c23; }
+.history-row.active { background: #20242d; box-shadow: inset 2px 0 0 var(--accent); }
+.history-row > div { min-width: 0; }
+.history-row strong { display: block; color: #d5d9e1; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-row div span { display: block; color: #747d8b; margin-top: 4px; font: 9.5px "SFMono-Regular", Consolas, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-row time { color: #6f7785; font-size: 9px; text-align: right; }
+.history-detail { min-width: 0; display: flex; flex-direction: column; background: #12141a; overflow: hidden; }
+.history-detail-heading { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.history-detail-heading strong { font-size: 12px; }
+.history-detail-heading span { display: block; margin-top: 4px; color: #858d9c; font-size: 10px; }
+.history-detail dl { margin: 0; padding: 8px 15px; }
+.history-detail dl > div { display: grid; grid-template-columns: 58px 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border-soft); }
+.history-detail dt { color: #737c8a; font-size: 10px; }
+.history-detail dd { margin: 0; color: #b9c0cb; font-size: 10px; word-break: break-all; }
+.history-detail pre { flex: 1; margin: 0; padding: 13px 15px 24px; overflow: auto; background: #0f1116; color: #aeb5c1; font: 10px/1.55 "SFMono-Regular", Consolas, monospace; white-space: pre-wrap; word-break: break-word; }

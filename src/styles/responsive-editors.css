@@ -1,0 +1,7 @@
+@media (max-width: 900px) {
+  .multipart-head, .multipart-row { grid-template-columns: 26px 72px minmax(90px, .55fr) minmax(120px, 1fr) 30px; }
+  .settings-field { grid-template-columns: 1fr; gap: 6px; }
+}
+
+
+.settings-description { margin: 0; padding: 12px 14px; color: #98a1af; font-size: 11px; line-height: 1.5; }

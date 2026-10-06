@@ -1,0 +1,5 @@
+@media (max-width: 1080px) {
+  .history-layout { grid-template-columns: 1fr; }
+  .history-detail { display: none; }
+  .auth-editor { grid-template-columns: 160px minmax(0, 1fr); }
+}

@@ -1,6 +1,6 @@
 import type { StoreApi } from 'zustand';
 import type { ApiCollection, WorkspaceView } from '../domain/workspace.ts';
-import type { ApiRequest, KeyValue, MultipartField } from '../domain/request.ts';
+import type { ApiRequest } from '../domain/request.ts';
 import type { ApiResponse, RequestRuntime } from '../domain/response.ts';
 import type { HistoryEntry } from '../domain/history.ts';
 import type { NetworkSettings } from '../domain/network.ts';

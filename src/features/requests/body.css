@@ -1,0 +1,4 @@
+.body-type-row { display: flex; gap: 16px; color: var(--muted); font-size: 11px; padding: 2px 0 9px; }
+.body-type-row label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.body-type-row input { accent-color: var(--accent); }
+.code-editor { width: 100%; min-height: 140px; resize: vertical; border: 1px solid var(--border-soft); background: #111319; color: #d7dbe4; outline: 0; border-radius: 7px; padding: 12px; line-height: 1.55; font: 12px/1.55 "SFMono-Regular", Consolas, monospace; }

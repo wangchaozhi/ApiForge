@@ -1,0 +1,4 @@
+@media (max-width: 1100px) {
+  .request-tab { min-width: 135px; }
+  .tree-actions { display: flex; }
+}

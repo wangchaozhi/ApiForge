@@ -1,0 +1,6 @@
+.response-tabs { flex: 0 0 37px; align-items: flex-end; }
+.response-code { margin: 0; flex: 1; overflow: auto; background: #111319; color: #cdd3de; padding: 14px 18px 28px; font: 11.5px/1.6 "SFMono-Regular", Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+.response-headers { flex: 1; overflow: auto; padding: 8px 18px 24px; }
+.response-headers > div { display: grid; grid-template-columns: minmax(160px, 30%) 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
+.response-headers span { color: #8f98a8; font-size: 11px; }
+.response-headers code { color: #cbd0d9; font-size: 11px; word-break: break-all; }

@@ -1,0 +1,4 @@
+.request-actions { margin-left: auto; display: flex; gap: 5px; }
+.text-button { border: 0; background: transparent; color: #7f8898; padding: 6px 7px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 10px; }
+.text-button:hover { background: #1c2028; color: #d7dbe4; }
+.nav-count { margin-left: auto; background: #242933; color: #9aa3b2; border-radius: 99px; min-width: 20px; padding: 1px 6px; text-align: center; font-size: 9px; }

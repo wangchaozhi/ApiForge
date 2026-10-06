@@ -24,22 +24,10 @@ export const createRequestsSlice: AppSlice<'setActiveRequest' | 'closeRequest' |
   createRequest: (target = {}) =>
     set((state) => {
       const request = newRequest();
-      let collections = state.collections;
-      const collectionId = target.collectionId ?? state.collections[0]?.id;
-      if (collectionId) {
-        collections = state.collections.map((collection) => {
-          if (collection.id !== collectionId) return collection;
-          if (target.folderId) {
-            return {
-              ...collection,
-              folders: collection.folders.map((folder) =>
-                folder.id === target.folderId ? { ...folder, requestIds: [...folder.requestIds, request.id] } : folder,
-              ),
-            };
-          }
-          return { ...collection, requestIds: [...collection.requestIds, request.id] };
-        });
-      }
+      const collections = addRequestToTarget(state.collections, request.id, {
+        ...target,
+        collectionId: target.collectionId ?? state.collections[0]?.id,
+      });
       return {
         requests: [...state.requests, request],
         collections,
@@ -52,11 +40,7 @@ export const createRequestsSlice: AppSlice<'setActiveRequest' | 'closeRequest' |
   deleteRequest: (id) =>
     set((state) => {
       const requests = state.requests.filter((item) => item.id !== id);
-      const collections = state.collections.map((collection) => ({
-        ...collection,
-        requestIds: collection.requestIds.filter((requestId) => requestId !== id),
-        folders: collection.folders.map((folder) => ({ ...folder, requestIds: folder.requestIds.filter((requestId) => requestId !== id) })),
-      }));
+      const collections = removeRequestFromCollections(state.collections, id);
       const openRequestIds = state.openRequestIds.filter((requestId) => requestId !== id);
       const runtimeByRequest = { ...state.runtimeByRequest };
       delete runtimeByRequest[id];

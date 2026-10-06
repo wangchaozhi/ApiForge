@@ -1,0 +1,11 @@
+.section-label-actions { display: flex; align-items: center; gap: 2px; }
+.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
+.collection-node[draggable="true"] { transition: opacity .12s ease, background .12s ease; }
+.collection-node.dragging { opacity: .48; }
+.collection-drag-handle { flex: 0 0 12px; width: 12px; color: #505866; display: grid; place-items: center; cursor: grab; }
+.collection-drag-handle:active { cursor: grabbing; }
+.tree-request-wrap { padding-right: 66px; }
+.tree-request-actions { display: none; position: absolute; right: 1px; top: 50%; transform: translateY(-50%); align-items: center; gap: 1px; background: linear-gradient(90deg, transparent, #171a21 14%); padding-left: 8px; }
+.tree-request-wrap:hover .tree-request-actions { display: flex; }
+.tree-request-actions .tree-icon-action { display: grid; position: static; right: auto; top: auto; transform: none; border: 0; background: transparent; color: #687181; cursor: pointer; place-items: center; border-radius: 4px; }
+.tree-request-actions .tree-icon-action:hover { color: #cbd1da; background: #22262e; }

@@ -1,0 +1,6 @@
+.multipart-head, .multipart-row { grid-template-columns: 28px 86px minmax(120px, .65fr) minmax(180px, 1.35fr) 32px; }
+.multipart-row select { height: 32px; border: 0; border-right: 1px solid var(--border-soft); background: transparent; color: #b8bfcb; outline: 0; padding: 0 7px; font-size: 10px; }
+.file-picker-button { min-width: 0; height: 32px; border: 0; border-right: 1px solid var(--border-soft); background: transparent; color: #aeb6c4; display: flex; align-items: center; gap: 7px; padding: 0 9px; cursor: pointer; text-align: left; }
+.file-picker-button:hover:not(:disabled) { background: #181b22; color: var(--text); }
+.file-picker-button:disabled { color: #626a77; cursor: default; }
+.file-picker-button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 10.5px "SFMono-Regular", Consolas, monospace; }
