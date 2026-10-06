@@ -2,17 +2,11 @@ import { translate as t } from '../i18n';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createId } from '../lib/id';
-import type {
-  ApiCollection,
-  ApiRequest,
-  ApiResponse,
-  HistoryEntry,
-  KeyValue,
-  MultipartField,
-  NetworkSettings,
-  RequestRuntime,
-  WorkspaceView,
-} from '../types/api';
+import type { ApiCollection, WorkspaceView } from '../domain/workspace.ts';
+import type { ApiRequest, KeyValue, MultipartField } from '../domain/request.ts';
+import type { ApiResponse, RequestRuntime } from '../domain/response.ts';
+import type { HistoryEntry } from '../domain/history.ts';
+import type { NetworkSettings } from '../domain/network.ts';
 
 const emptyRow = (): KeyValue => ({ id: createId('kv'), key: '', value: '', enabled: true });
 const emptyMultipartRow = (): MultipartField => ({

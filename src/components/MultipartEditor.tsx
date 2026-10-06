@@ -2,7 +2,7 @@ import { translate as t, useLocale } from '../i18n';
 import { FileUp, Plus, Trash2 } from 'lucide-react';
 import { createId } from '../lib/id';
 import { isTauriRuntime } from '../lib/request';
-import type { MultipartField } from '../types/api';
+import type { MultipartField } from '../domain/request.ts';
 
 type Props = {
   rows: MultipartField[];

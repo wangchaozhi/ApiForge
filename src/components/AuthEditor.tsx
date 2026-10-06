@@ -1,6 +1,6 @@
 import { translate as t, useLocale } from '../i18n';
 import type { MessageKey } from '../i18n/messages';
-import type { ApiRequest, AuthConfig } from '../types/api';
+import type { ApiRequest, AuthConfig } from '../domain/request.ts';
 
 type Props = {
   request: ApiRequest;

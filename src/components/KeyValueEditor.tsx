@@ -1,7 +1,7 @@
 import { translate as t, useLocale } from '../i18n';
 import { Plus, Trash2 } from 'lucide-react';
 import { createId } from '../lib/id';
-import type { KeyValue } from '../types/api';
+import type { KeyValue } from '../domain/request.ts';
 
 type Props = {
   rows: KeyValue[];

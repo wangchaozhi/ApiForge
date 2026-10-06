@@ -2,7 +2,7 @@ import { translate as t, useLocale } from '../i18n';
 import { Cookie, RefreshCw, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { clearCookieJar, listCookies, removeCookie } from '../lib/request';
-import type { CookieInfo } from '../types/api';
+import type { CookieInfo } from '../domain/cookies.ts';
 
 export function CookieManagerPanel() {
   useLocale();

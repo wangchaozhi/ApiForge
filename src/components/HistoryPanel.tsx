@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Clock3, RotateCcw, Trash2 } from 'lucide-react';
 import { clearHistory, loadHistory } from '../lib/history';
 import { useAppStore } from '../store/appStore';
-import type { ApiRequest, ApiResponse, HistoryEntry } from '../types/api';
+import type { ApiRequest } from '../domain/request.ts';
+import type { ApiResponse } from '../domain/response.ts';
+import type { HistoryEntry } from '../domain/history.ts';
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;

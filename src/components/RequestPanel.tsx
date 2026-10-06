@@ -11,7 +11,7 @@ import { makeHistoryEntry, saveHistory } from '../lib/history';
 import { cancelApiRequest, sendApiRequest, toEngineRequest } from '../lib/request';
 import { createId } from '../lib/id';
 import { useAppStore } from '../store/appStore';
-import type { BodyType, HttpMethod } from '../types/api';
+import type { BodyType, HttpMethod } from '../domain/request.ts';
 
 const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 const bodyTypes: BodyType[] = ['none', 'json', 'raw', 'form-urlencoded', 'form-data'];
