@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { resolveLocale, translateMessage, type LanguagePreference, type MessageParams } from './core';
+import { resolveLocale, translateMessage, type LanguagePreference, type MessageParams } from './core.ts';
 import type { MessageKey } from './messages';
 
 const systemLanguage = () => typeof navigator === 'undefined' ? 'en' : navigator.language;

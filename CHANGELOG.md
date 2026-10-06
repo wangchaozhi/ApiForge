@@ -1,5 +1,7 @@
 ## Unreleased
 
+- Preserve repeated query parameters and existing URL query values when sending requests.
+
 - Add persisted English / Simplified Chinese language selection and system-language detection.
 - Fix Node type definitions, Monaco worker exports, Cookie Store ownership and missing desktop icons.
 - Pin Rust 1.98.1 and commit npm/Cargo lockfiles for reproducible CI.

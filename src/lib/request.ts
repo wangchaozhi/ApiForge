@@ -1,4 +1,4 @@
-import { translate as t } from '../i18n';
+import { translate as t } from '../i18n/index.ts';
 import type { ApiRequest, ApiResponse, CookieInfo, EngineBody, EngineRequest, NetworkSettings } from '../types/api';
 
 const browserControllers = new Map<string, AbortController>();
@@ -42,7 +42,7 @@ function buildUrl(request: ApiRequest, variables: Record<string, string>) {
   request.params
     .filter((item) => item.enabled && item.key.trim())
     .forEach((item) => {
-      url.searchParams.set(interpolate(item.key, variables), interpolate(item.value, variables));
+      url.searchParams.append(interpolate(item.key, variables), interpolate(item.value, variables));
     });
 
   if (request.auth.type === 'apiKey' && request.auth.addTo === 'query' && request.auth.key.trim()) {
