@@ -8,7 +8,7 @@ import {
   serializePostmanCollection,
   serializePostmanEnvironment,
   serializeWorkspace,
-} from '../../lib/workspace.ts';
+} from '../../services/workspace/transfer.ts';
 import { useAppStore } from '../../store/appStore.ts';
 
 function downloadText(fileName: string, content: string) {

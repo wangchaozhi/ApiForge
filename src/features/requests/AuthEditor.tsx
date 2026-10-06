@@ -5,7 +5,7 @@ import type { MessageKey } from '../../i18n/messages.ts';
 import { createId } from '../../lib/id.ts';
 import { interpolate } from '../../services/http/buildRequest.ts';
 import { sendApiRequest } from '../../services/http/transport.ts';
-import { isSecretVaultUnlocked, loadAuthSecrets, saveAuthSecrets } from '../../lib/secrets.ts';
+import { isSecretVaultUnlocked, loadAuthSecrets, saveAuthSecrets } from '../../services/secrets.ts';
 import { getActiveEnvironmentValues, useAppStore } from '../../store/appStore.ts';
 import type { ApiRequest, AuthConfig } from '../../domain/request.ts';
 import type { EngineField } from '../../domain/engine.ts';

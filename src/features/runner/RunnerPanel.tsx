@@ -11,7 +11,7 @@ import {
   applyHeaderMutations,
   runRequestScript,
   type ScriptTestResult,
-} from '../../lib/scripts.ts';
+} from '../../services/scripts.ts';
 import { getActiveEnvironmentValues, useAppStore } from '../../store/appStore.ts';
 
 type RunnerResult = {

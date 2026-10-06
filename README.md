@@ -2,7 +2,11 @@
 
 ApiForge is a local-first desktop API client inspired by Postman and Insomnia. It uses Tauri 2 for the desktop shell, React + TypeScript for the UI, Rust + reqwest for the native HTTP engine, and SQLite for request history.
 
-## v0.5.0
+## Current main (1.0.0)
+
+All development continues directly on `main`. The v0.7/v0.8 protocol, runner, authentication and environment work, v1.0 update/persistence work, and modular architecture refactor are integrated here. See [Module architecture](docs/ARCHITECTURE.md) and [release signing requirements](RELEASE_SECURITY.md).
+
+## v0.5.0 foundation
 
 This iteration expands workspace management, import support, response inspection, and desktop persistence.
 

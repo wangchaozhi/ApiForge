@@ -75,3 +75,22 @@ test('persistence restores legacy requests and removes dangling references witho
 test('independent stores do not share starter identities', () => {
   assert.notEqual(makeStore().getState().activeRequestId, makeStore().getState().activeRequestId);
 });
+
+test('environment profiles stay isolated and persisted secrets are redacted', () => {
+  const store = makeStore();
+  const originalId = store.getState().activeEnvironmentId;
+  store.getState().setEnvironment('token', 'first');
+  const secondId = store.getState().createEnvironmentProfile('Staging');
+  store.getState().setEnvironment('token', 'second-secret');
+  store.getState().setEnvironmentSecret('token', true);
+  store.getState().updateNetworkSettings({ proxyPassword: 'proxy-secret', clientCertificatePassword: 'certificate-secret' });
+  store.getState().updateActiveRequest((request) => ({ ...request, auth: { type: 'bearer', token: 'bearer-secret' } }));
+  assert.equal(getActiveEnvironmentValues(store.getState()).token, 'second-secret');
+  const saved = workspacePersistence.partialize(store.getState());
+  assert.equal(saved.environmentProfiles.find((profile) => profile.id === secondId).variables.token.value, '');
+  assert.equal(saved.requests[0].auth.token, '');
+  assert.equal(saved.networkSettings.proxyPassword, '');
+  assert.equal(saved.networkSettings.clientCertificatePassword, '');
+  store.getState().setActiveEnvironmentProfile(originalId);
+  assert.equal(getActiveEnvironmentValues(store.getState()).token, 'first');
+});

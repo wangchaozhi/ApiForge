@@ -63,7 +63,12 @@ function prettyBody(response: ApiResponse | null) {
 
 export function GraphqlPanel() {
   useLocale();
-  const variables = useAppStore(getActiveEnvironmentValues);
+  const environmentProfiles = useAppStore((state) => state.environmentProfiles);
+  const activeEnvironmentId = useAppStore((state) => state.activeEnvironmentId);
+  const variables = useMemo(
+    () => getActiveEnvironmentValues({ environmentProfiles, activeEnvironmentId }),
+    [environmentProfiles, activeEnvironmentId],
+  );
   const networkSettings = useAppStore((state) => state.networkSettings);
 
   const [request, setRequest] = useState<ApiRequest>(() => starterRequest());

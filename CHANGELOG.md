@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Consolidate upstream protocol/auth/environment and v1.0 update/persistence work on main while preserving module boundaries.
+- Fix GraphQL environment subscriptions causing an infinite render loop.
+
 - Refactor frontend into domain contracts, transport/import services, typed store slices, feature UI and shared components.
 - Split native IPC commands, HTTP execution, cookies, database, state and models into dedicated Rust modules.
 - Organize styles by feature while preserving the cascade, and add module-boundary and behavior regression checks.

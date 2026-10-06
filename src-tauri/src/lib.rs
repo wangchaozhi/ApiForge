@@ -19,7 +19,16 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    if let Some(public_key) = option_env!("APIFORGE_UPDATER_PUBKEY") {
+        builder = builder.plugin(
+            tauri_plugin_updater::Builder::new()
+                .pubkey(public_key)
+                .build(),
+        );
+    }
+    builder
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let local_data_dir = app.path().app_local_data_dir()?;

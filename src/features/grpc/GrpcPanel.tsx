@@ -1,7 +1,7 @@
 import { FileUp, Play, Waypoints } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { translate as t, useLocale } from '../../i18n/index.ts';
-import { inspectGrpcDescriptor, invokeGrpc, type GrpcServiceInfo } from '../../lib/grpc.ts';
+import { inspectGrpcDescriptor, invokeGrpc, type GrpcServiceInfo } from '../../services/grpc.ts';
 import { createId } from '../../lib/id.ts';
 import { interpolate } from '../../services/http/buildRequest.ts';
 import { getActiveEnvironmentValues, useAppStore } from '../../store/appStore.ts';

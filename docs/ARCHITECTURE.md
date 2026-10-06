@@ -1,7 +1,7 @@
 # ApiForge module architecture
 
 The frontend and native backend share the same request/response contract. Refactoring
-keeps the Tauri command names, camelCase IPC payloads, workspace storage keys, SQLite
+keeps the Tauri command names, camelCase IPC payloads, workspace storage keys (including legacy environment migration), SQLite
 schema, cookie filename, and import/export formats compatible with v0.5 workspaces.
 
 ## Frontend ownership
@@ -17,7 +17,7 @@ schema, cookie filename, and import/export formats compatible with v0.5 workspac
 | `src/services/cookies.ts` | Desktop cookie commands and browser fallback |
 | `src/platform/` | Runtime detection |
 | `src/store/` | Typed workspace actions, initial data, collection helpers and persistence |
-| `src/features/` | Collections, requests, responses, history, environments, cookies and settings UI |
+| `src/features/` | Collections, requests, responses, protocols, runner, history, environments, cookies and settings UI |
 | `src/shared/` | Reusable fields, Monaco component/runtime and shared styles |
 | `src/i18n/` | Translation catalog, interpolation, locale selection and language preference |
 
@@ -42,8 +42,8 @@ and circular dependencies. TypeScript also rejects unused local declarations and
 
 ### Workspace state and persistence
 
-`createAppState.ts` composes five action slices: requests, collections, runtime,
-preferences and history. `types.ts` provides their shared contract. Pure collection
+`createAppState.ts` composes seven action slices: requests, collections, runtime,
+preferences, history, environments and workspace transfer. `types.ts` provides their shared contract. Pure collection
 membership operations live in `collections.ts`; constructors/default values live in
 `defaults.ts`. Each new store receives fresh starter request/collection identities.
 
@@ -52,6 +52,11 @@ membership operations live in `collections.ts`; constructors/default values live
 restores valid tabs and fills missing network defaults. In-flight operations,
 responses and history are not serialized into the workspace. Browser history retains
 `apiforge-browser-history-v1`; language preference retains `apiforge-language-v1`.
+
+Environment profiles are persisted with secret values redacted; request credentials and
+network passwords are also redacted. `platform/durableStorage.ts` retains a previous
+valid snapshot for recovery. Workspace import/export and schema migrations live in
+`services/workspace/`; protocol clients and the secret vault live in `services/`.
 
 ### Styles
 
@@ -76,7 +81,9 @@ Cross-feature responsive adjustments remain in `src/styles/responsive-*.css`.
 | `database.rs` | SQLite initialization and bounded history storage |
 
 Commands remain `send_request`, `cancel_request`, `clear_cookie_jar`, `list_cookies`,
-`remove_cookie`, `save_history`, `list_history`, and `clear_history`. SQLite remains
+`remove_cookie`, `save_history`, `list_history`, and `clear_history`, plus script, SSE, WebSocket and gRPC commands.
+Protocol implementations live in `sse.rs`, `websocket.rs`, `grpc.rs`, `script.rs` and
+`digest.rs`; they use the shared models, errors and HTTP state. SQLite remains
 `apiforge.sqlite3`; cookies remain `cookies.json` under the app data directory.
 Database methods operate without Tauri command state, allowing in-memory database tests.
 

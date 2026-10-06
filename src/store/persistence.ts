@@ -1,7 +1,9 @@
+import { createJSONStorage } from 'zustand/middleware';
+import { durableLocalStorage } from '../platform/durableStorage.ts';
 import type { PersistOptions } from 'zustand/middleware';
 import type { AppState } from './types.ts';
 import { createId } from '../lib/id.ts';
-import { redactAuthSecrets } from '../lib/auth.ts';
+import { redactAuthSecrets } from '../domain/auth.ts';
 import { normalizeRequest, emptyRuntime, defaultNetworkSettings } from './defaults.ts';
 import { normalizeCollections } from './collections.ts';
 
@@ -9,6 +11,7 @@ export type PersistedWorkspace = Pick<AppState, 'requests' | 'collections' | 'op
 
 export const workspacePersistence: PersistOptions<AppState, PersistedWorkspace> = {
   name: 'apiforge-workspace-v2',
+  storage: createJSONStorage(() => durableLocalStorage),
   partialize: (state) => ({
     requests: state.requests.map((request) => ({ ...request, auth: redactAuthSecrets(request.auth) })),
     collections: state.collections,

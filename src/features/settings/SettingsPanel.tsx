@@ -1,9 +1,9 @@
 import { translate as t, useLocale, useLanguageStore } from '../../i18n/index.ts';
-import { Cookie, RotateCcw, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { Cookie, Download, RotateCcw, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { clearCookieJar } from '../../services/cookies.ts';
 import { isTauriRuntime } from '../../platform/runtime.ts';
-import { isSecretVaultUnlocked, loadNetworkSecrets, saveNetworkSecret } from '../../lib/secrets.ts';
+import { isSecretVaultUnlocked, loadNetworkSecrets, saveNetworkSecret } from '../../services/secrets.ts';
 import { useAppStore } from '../../store/appStore.ts';
 import { WorkspaceTransferPanel } from './WorkspaceTransferPanel.tsx';
 
@@ -15,6 +15,8 @@ export function SettingsPanel() {
   const update = useAppStore((state) => state.updateNetworkSettings);
   const reset = useAppStore((state) => state.resetNetworkSettings);
   const [cookieMessage, setCookieMessage] = useState<string | null>(null);
+  const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+  const [updateBusy, setUpdateBusy] = useState(false);
 
   useEffect(() => {
     if (!isSecretVaultUnlocked()) return;
@@ -27,6 +29,30 @@ export function SettingsPanel() {
       setCookieMessage(t("Cookie jar cleared."));
     } catch (error) {
       setCookieMessage(error instanceof Error ? error.message : String(error));
+    }
+  };
+
+  const checkForUpdates = async () => {
+    setUpdateBusy(true);
+    setUpdateMessage(null);
+    try {
+      if (!isTauriRuntime()) throw new Error(t('Updates require the desktop runtime.'));
+      const [{ check }, { relaunch }] = await Promise.all([
+        import('@tauri-apps/plugin-updater'),
+        import('@tauri-apps/plugin-process'),
+      ]);
+      const update = await check();
+      if (!update) {
+        setUpdateMessage(t('ApiForge is up to date.'));
+        return;
+      }
+      setUpdateMessage(t('Downloading version {version}…', { version: update.version }));
+      await update.downloadAndInstall();
+      await relaunch();
+    } catch (error) {
+      setUpdateMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setUpdateBusy(false);
     }
   };
 
@@ -65,6 +91,14 @@ export function SettingsPanel() {
           <p className="settings-description">{t('Choose the display language. Your workspace data stays unchanged.')}</p>
         </div>
         <WorkspaceTransferPanel />
+
+        <div className="settings-card">
+          <div className="settings-card-title"><Download size={16} /><div><strong>{t('Updates')}</strong><span>{t('Signed release channel')}</span></div></div>
+          <div className="settings-inline-action">
+            <button className="secondary-button compact" disabled={updateBusy} onClick={() => void checkForUpdates()}><Download size={13} />{updateBusy ? t('Checking…') : t('Check for updates')}</button>
+            {updateMessage && <span>{updateMessage}</span>}
+          </div>
+        </div>
 
         <div className="settings-card">
           <div className="settings-card-title"><SlidersHorizontal size={16} /><div><strong>{t("Request behavior")}</strong><span>{t("Timeout and redirect policy")}</span></div></div>

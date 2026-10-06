@@ -1,6 +1,6 @@
 [package]
 name = "apiforge"
-version = "0.5.0"
+version = "1.0.0"
 description = "A local-first API client built with Tauri"
 authors = ["ApiForge Contributors"]
 edition = "2024"
@@ -32,6 +32,8 @@ serde_json = "1.0.151"
 tauri = { version = "2.11.6", features = [] }
 tauri-plugin-dialog = "2.7.3"
 tauri-plugin-stronghold = "2.3.2"
+tauri-plugin-updater = "2.12.0"
+tauri-plugin-process = "2.3.1"
 thiserror = "2.0.20"
 tokio = { version = "1.53.1", features = ["macros", "sync"] }
 tokio-util = { version = "0.7.19", features = ["rt"] }

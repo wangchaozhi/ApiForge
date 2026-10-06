@@ -1,2 +1,2 @@
 // Compatibility export; new code imports the implementation module directly.
-export * from '../services/sse.ts';
+export * from '../services/workspace/migrations.ts';

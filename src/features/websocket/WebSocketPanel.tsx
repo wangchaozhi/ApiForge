@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { translate as t, useLocale } from '../../i18n/index.ts';
 import { createId } from '../../lib/id.ts';
 import { toEngineRequest } from '../../services/http/buildRequest.ts';
-import { connectWebSocket, disconnectWebSocket, sendWebSocketMessage, type WebSocketNativeEvent } from '../../lib/websocket.ts';
+import { connectWebSocket, disconnectWebSocket, sendWebSocketMessage, type WebSocketNativeEvent } from '../../services/websocket.ts';
 import { getActiveEnvironmentValues, useAppStore } from '../../store/appStore.ts';
 import type { ApiRequest, KeyValue } from '../../domain/request.ts';
 import { AuthEditor } from '../requests/AuthEditor.tsx';

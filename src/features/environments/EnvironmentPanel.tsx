@@ -10,7 +10,7 @@ import {
   moveSecret,
   unlockSecretVault,
   writeSecret,
-} from '../../lib/secrets.ts';
+} from '../../services/secrets.ts';
 import { useAppStore } from '../../store/appStore.ts';
 
 export function EnvironmentPanel() {

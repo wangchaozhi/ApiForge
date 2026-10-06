@@ -1,3 +1,7 @@
+# Branch consolidation
+
+All branch work is now integrated into `main`; future development happens directly on `main`. Branch and PR references below describe historical milestones.
+
 # ApiForge Development Roadmap
 
 > Last updated: 2026-09-23

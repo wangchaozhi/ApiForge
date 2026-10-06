@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from 'react';
 import { translate as t, useLocale } from '../../i18n/index.ts';
 import { createId } from '../../lib/id.ts';
 import { toEngineRequest } from '../../services/http/buildRequest.ts';
-import { cancelSse, streamSse, type SseEvent, type SseOpened } from '../../lib/sse.ts';
+import { cancelSse, streamSse, type SseEvent, type SseOpened } from '../../services/sse.ts';
 import { getActiveEnvironmentValues, useAppStore } from '../../store/appStore.ts';
 import type { ApiRequest, KeyValue } from '../../domain/request.ts';
 import { AuthEditor } from '../requests/AuthEditor.tsx';
