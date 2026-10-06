@@ -11,7 +11,7 @@ export function checkVersions(root = new URL('../', import.meta.url), tag = '') 
     json('package-lock.json').version,
     json('package-lock.json').packages[''].version,
     cargo.match(/^version = "([^"]+)"/m)?.[1],
-    lock.match(/name = "apiforge"\nversion = "([^"]+)"/)?.[1],
+    lock.match(/name = "apiforge"\r?\nversion = "([^"]+)"/)?.[1],
   ];
   if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version) || versions.some((value) => value !== version)) {
     throw new Error(`Version mismatch: package=${version}, manifests/locks=${versions.join(', ')}`);
