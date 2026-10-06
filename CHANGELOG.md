@@ -1,5 +1,7 @@
 ## Unreleased
 
+- Quote shell-sensitive URL and body characters in exported cURL commands.
+
 - Preserve repeated query parameters and existing URL query values when sending requests.
 
 - Add persisted English / Simplified Chinese language selection and system-language detection.

@@ -1,10 +1,10 @@
-import { translate as t } from '../i18n';
-import { createId } from './id';
-import { toEngineRequest } from './request';
+import { translate as t } from '../i18n/index.ts';
+import { createId } from './id.ts';
+import { toEngineRequest } from './request.ts';
 import type { ApiRequest, HttpMethod, KeyValue, MultipartField, NetworkSettings } from '../types/api';
 
 function shellQuote(value: string) {
-  if (/^[A-Za-z0-9_./:?=&%+@-]+$/.test(value)) return value;
+  if (/^[A-Za-z0-9_./:=,%+@-]+$/.test(value)) return value;
   return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 
