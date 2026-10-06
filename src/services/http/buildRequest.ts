@@ -85,6 +85,8 @@ export function toEngineRequest(
 
   if (request.auth.type === 'bearer' && request.auth.token) {
     headers.Authorization = `Bearer ${interpolate(request.auth.token, variables)}`;
+  } else if (request.auth.type === 'oauth2' && request.auth.accessToken) {
+    headers.Authorization = `Bearer ${interpolate(request.auth.accessToken, variables)}`;
   } else if (request.auth.type === 'basic') {
     const username = interpolate(request.auth.username, variables);
     const password = interpolate(request.auth.password, variables);
@@ -99,5 +101,11 @@ export function toEngineRequest(
     headers,
     body: buildBody(request, variables),
     network,
+    digestAuth: request.auth.type === 'digest'
+      ? {
+          username: interpolate(request.auth.username, variables),
+          password: interpolate(request.auth.password, variables),
+        }
+      : undefined,
   };
 }

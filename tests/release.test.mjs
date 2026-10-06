@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkVersions } from '../scripts/check-release-version.mjs';
+import { checkVersions, extractCargoLockVersion } from '../scripts/check-release-version.mjs';
 
 test('release manifests and lockfiles agree', () => {
   const version = checkVersions();
@@ -26,4 +26,8 @@ test('version validation accepts Windows CRLF checkouts', async () => {
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test('handles CRLF Cargo.lock content', () => {
+  assert.equal(extractCargoLockVersion('[[package]]\r\nname = "apiforge"\r\nversion = "0.5.0"\r\n'), '0.5.0');
 });

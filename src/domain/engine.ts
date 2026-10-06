@@ -15,4 +15,5 @@ export type EngineRequest = {
   headers: Record<string, string>;
   body: EngineBody;
   network: NetworkSettings;
+  digestAuth?: { username: string; password: string };
 };

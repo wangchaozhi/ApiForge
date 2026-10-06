@@ -43,6 +43,8 @@ function browserBody(body: EngineBody): BodyInit | undefined {
 }
 
 export async function sendBrowserRequest(request: EngineRequest, operationId: string): Promise<ApiResponse> {
+  if (request.digestAuth) throw new Error(t('Digest Auth requires the Tauri desktop runtime.'));
+
   const started = performance.now();
   const controller = new AbortController();
   browserControllers.set(operationId, controller);

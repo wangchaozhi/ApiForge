@@ -27,6 +27,10 @@ pub(crate) enum AppError {
     CookiePersistence(String),
     #[error("request cancellation lock is poisoned")]
     CancellationLock,
+    #[error("authentication error: {0}")]
+    Authentication(String),
+    #[error("protocol error: {0}")]
+    Protocol(String),
 }
 
 impl Serialize for AppError {

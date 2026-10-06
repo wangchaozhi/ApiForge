@@ -8,3 +8,5 @@ export { defaultNetworkSettings } from './defaults.ts';
 export type { CreateTarget } from './types.ts';
 
 export const useAppStore = create<AppState>()(persist(createAppState, workspacePersistence));
+
+export { getActiveEnvironmentProfile, getActiveEnvironmentValues } from './environments.ts';

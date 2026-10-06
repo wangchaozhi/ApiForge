@@ -1,3 +1,4 @@
+import { CodeEditor } from '../../shared/components/CodeEditor.tsx';
 import { RequestBodyEditor } from './RequestBodyEditor.tsx';
 import { useRequestExecution } from './useRequestExecution.ts';
 import { translate as t, useLocale } from '../../i18n/index.ts';
@@ -8,11 +9,11 @@ import { CurlDialog } from './CurlDialog.tsx';
 import { KeyValueEditor } from '../../shared/components/KeyValueEditor.tsx';
 import { curlToRequest } from '../../services/curl/import.ts';
 import { requestToCurl } from '../../services/curl/export.ts';
-import { useAppStore } from '../../store/appStore.ts';
+import { getActiveEnvironmentValues, useAppStore } from '../../store/appStore.ts';
 import type { HttpMethod } from '../../domain/request.ts';
 
 const methods: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
-type Tab = 'params' | 'headers' | 'auth' | 'body';
+type Tab = 'params' | 'headers' | 'auth' | 'body' | 'scripts';
 
 export function RequestPanel() {
   useLocale();
@@ -21,7 +22,9 @@ export function RequestPanel() {
   const [importError, setImportError] = useState<string | null>(null);
   const activeRequestId = useAppStore((state) => state.activeRequestId);
   const request = useAppStore((state) => state.requests.find((item) => item.id === activeRequestId));
-  const variables = useAppStore((state) => state.environments);
+  const environmentProfiles = useAppStore((state) => state.environmentProfiles);
+  const activeEnvironmentId = useAppStore((state) => state.activeEnvironmentId);
+  const variables = useMemo(() => getActiveEnvironmentValues({ environmentProfiles, activeEnvironmentId }), [environmentProfiles, activeEnvironmentId]);
   const networkSettings = useAppStore((state) => state.networkSettings);
   const update = useAppStore((state) => state.updateActiveRequest);
   const importRequest = useAppStore((state) => state.importRequest);
@@ -92,6 +95,7 @@ export function RequestPanel() {
         <button className={tab === 'headers' ? 'active' : ''} onClick={() => setTab('headers')}>{t("Headers")} <span>{counts.headers}</span></button>
         <button className={tab === 'auth' ? 'active' : ''} onClick={() => setTab('auth')}>{t("Authorization")}</button>
         <button className={tab === 'body' ? 'active' : ''} onClick={() => setTab('body')}>{t("Body")}</button>
+        <button className={tab === 'scripts' ? 'active' : ''} onClick={() => setTab('scripts')}>{t('Scripts')}</button>
       </div>
 
       <div className="tab-content">
@@ -106,6 +110,32 @@ export function RequestPanel() {
         )}
         {tab === 'body' && (
           <RequestBodyEditor request={request} update={update} />
+        )}
+        {tab === 'scripts' && (
+          <div className="script-editors">
+            <section className="script-editor-card">
+              <div className="script-editor-heading">
+                <strong>{t('Pre-request Script')}</strong>
+                <span>{t('Scripts execute when this request runs in Collection Runner.')}</span>
+              </div>
+              <CodeEditor
+                value={request.preRequestScript ?? ''}
+                language="javascript"
+                onChange={(preRequestScript) => update((current) => ({ ...current, preRequestScript }))}
+              />
+            </section>
+            <section className="script-editor-card">
+              <div className="script-editor-heading">
+                <strong>{t('Tests')}</strong>
+                <span>{t('Scripts execute when this request runs in Collection Runner.')}</span>
+              </div>
+              <CodeEditor
+                value={request.testScript ?? ''}
+                language="javascript"
+                onChange={(testScript) => update((current) => ({ ...current, testScript }))}
+              />
+            </section>
+          </div>
         )}
       </div>
 

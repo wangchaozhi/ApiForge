@@ -5,4 +5,10 @@ export type NetworkSettings = {
   cookiesEnabled: boolean;
   useSystemProxy: boolean;
   proxyUrl: string;
+  proxyUsername: string;
+  proxyPassword: string;
+  clientCertificateType: 'none' | 'pkcs12' | 'pem';
+  clientCertificatePath: string;
+  clientKeyPath: string;
+  clientCertificatePassword: string;
 };

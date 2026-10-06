@@ -1,3 +1,4 @@
+import { refreshOAuthAccessToken } from '../../services/http/oauth.ts';
 import { useAppStore } from '../../store/appStore.ts';
 import { makeHistoryEntry, saveHistory } from '../../services/history.ts';
 import { sendApiRequest, cancelApiRequest } from '../../services/http/transport.ts';
@@ -17,10 +18,18 @@ export function useRequestExecution(request: ApiRequest | undefined, variables: 
     const nextOperationId = createId('op');
     startRequest(requestId, nextOperationId);
     try {
-      const engineRequest = toEngineRequest(request, variables, networkSettings);
+      let requestToSend = request;
+      if (request.auth.type === 'oauth2') {
+        const auth = await refreshOAuthAccessToken(request.auth, variables, networkSettings);
+        if (auth !== request.auth) {
+          requestToSend = { ...request, auth };
+          useAppStore.setState((state) => ({ requests: state.requests.map((item) => item.id === requestId ? { ...item, auth } : item) }));
+        }
+      }
+      const engineRequest = toEngineRequest(requestToSend, variables, networkSettings);
       const response = await sendApiRequest(engineRequest, nextOperationId);
       completeRequest(requestId, response);
-      const historyEntry = makeHistoryEntry(request, engineRequest, response);
+      const historyEntry = makeHistoryEntry(requestToSend, engineRequest, response);
       prependHistory(historyEntry);
       void saveHistory(historyEntry).catch(() => undefined);
     } catch (error) {

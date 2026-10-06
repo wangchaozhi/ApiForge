@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct EngineRequest {
     pub(crate) method: String,
@@ -9,9 +9,10 @@ pub(crate) struct EngineRequest {
     pub(crate) headers: HashMap<String, String>,
     pub(crate) body: EngineBody,
     pub(crate) network: NetworkSettings,
+    pub(crate) digest_auth: Option<DigestCredentials>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub(crate) enum EngineBody {
     None,
@@ -20,14 +21,14 @@ pub(crate) enum EngineBody {
     Multipart { fields: Vec<EngineMultipartField> },
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct EngineField {
     pub(crate) key: String,
     pub(crate) value: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct EngineMultipartField {
     pub(crate) key: String,
@@ -37,7 +38,7 @@ pub(crate) struct EngineMultipartField {
     pub(crate) file_name: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct NetworkSettings {
     pub(crate) timeout_ms: u64,
@@ -46,6 +47,19 @@ pub(crate) struct NetworkSettings {
     pub(crate) cookies_enabled: bool,
     pub(crate) use_system_proxy: bool,
     pub(crate) proxy_url: String,
+    pub(crate) proxy_username: String,
+    pub(crate) proxy_password: String,
+    pub(crate) client_certificate_type: String,
+    pub(crate) client_certificate_path: String,
+    pub(crate) client_key_path: String,
+    pub(crate) client_certificate_password: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct DigestCredentials {
+    pub(crate) username: String,
+    pub(crate) password: String,
 }
 
 #[derive(Debug, Serialize)]

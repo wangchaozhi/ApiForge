@@ -163,3 +163,66 @@ mod tests {
         assert_eq!(database.list_history(Some(0)).unwrap().len(), 1);
     }
 }
+
+#[cfg(test)]
+mod upstream_tests {
+    use super::*;
+
+    fn entry(index: usize) -> HistoryEntry {
+        HistoryEntry {
+            id: format!("history-{index:03}"),
+            request_id: "request".into(),
+            request_name: format!("Request {index}"),
+            method: "GET".into(),
+            url: format!("https://example.com/{index}"),
+            status: 200,
+            status_text: "OK".into(),
+            elapsed_ms: index as u128,
+            size_bytes: index,
+            request_json: "{}".into(),
+            response_json: "{}".into(),
+            created_at: format!(
+                "2026-09-22T16:{:02}:{:02}.{:03}Z",
+                (index / 60) % 60,
+                index % 60,
+                index
+            ),
+        }
+    }
+
+    #[test]
+    fn keeps_only_latest_500_entries() {
+        let database = Database::from_connection(Connection::open_in_memory().unwrap())
+            .expect("in-memory database");
+
+        for index in 0..505 {
+            database.save_history(entry(index)).expect("save history");
+        }
+
+        let rows = database.list_history(Some(500)).expect("list history");
+        assert_eq!(rows.len(), 500);
+        assert_eq!(rows.first().map(|row| row.id.as_str()), Some("history-504"));
+        assert!(!rows.iter().any(|row| row.id == "history-000"));
+    }
+
+    #[test]
+    fn clamps_history_query_limit() {
+        let database = Database::from_connection(Connection::open_in_memory().unwrap())
+            .expect("in-memory database");
+        for index in 0..3 {
+            database.save_history(entry(index)).expect("save history");
+        }
+
+        assert_eq!(
+            database.list_history(Some(0)).expect("minimum limit").len(),
+            1
+        );
+        assert_eq!(
+            database
+                .list_history(Some(999))
+                .expect("maximum limit")
+                .len(),
+            3
+        );
+    }
+}

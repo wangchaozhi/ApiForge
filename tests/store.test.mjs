@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createStore } from 'zustand/vanilla';
 import { createAppState } from '../src/store/createAppState.ts';
+import { getActiveEnvironmentValues } from '../src/store/environments.ts';
 import { workspacePersistence } from '../src/store/persistence.ts';
 
 const makeStore = () => createStore(createAppState);
@@ -68,7 +69,7 @@ test('persistence restores legacy requests and removes dangling references witho
   assert.equal(serialized.history, undefined);
   const roundtrip = workspacePersistence.merge(JSON.parse(JSON.stringify(serialized)), makeStore().getState());
   assert.deepEqual(roundtrip.requests, restored.requests);
-  assert.deepEqual(roundtrip.environments, saved.environments);
+  assert.deepEqual(getActiveEnvironmentValues(roundtrip), saved.environments);
 });
 
 test('independent stores do not share starter identities', () => {

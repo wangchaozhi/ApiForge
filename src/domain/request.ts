@@ -18,7 +18,22 @@ export type AuthConfig =
   | { type: 'none' }
   | { type: 'bearer'; token: string }
   | { type: 'basic'; username: string; password: string }
-  | { type: 'apiKey'; key: string; value: string; addTo: 'header' | 'query' };
+  | { type: 'digest'; username: string; password: string }
+  | { type: 'apiKey'; key: string; value: string; addTo: 'header' | 'query' }
+  | {
+      type: 'oauth2';
+      flow: 'authorization-code' | 'client-credentials';
+      authorizationUrl: string;
+      tokenUrl: string;
+      redirectUri: string;
+      clientId: string;
+      clientSecret: string;
+      scopes: string;
+      usePkce: boolean;
+      accessToken: string;
+      refreshToken: string;
+      expiresAt: number | null;
+    };
 
 export type ApiRequest = {
   id: string;
@@ -32,4 +47,6 @@ export type ApiRequest = {
   formFields: KeyValue[];
   multipartFields: MultipartField[];
   auth: AuthConfig;
+  preRequestScript?: string;
+  testScript?: string;
 };

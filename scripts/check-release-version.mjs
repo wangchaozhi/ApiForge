@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
+export function extractCargoLockVersion(lockText) {
+  const normalized = lockText.replace(/\r\n/g, '\n');
+  return normalized.match(/\[\[package\]\]\nname = "apiforge"\nversion = "([^"]+)"/)?.[1];
+}
+
 export function checkVersions(root = new URL('../', import.meta.url), tag = '') {
   const json = (path) => JSON.parse(readFileSync(new URL(path, root), 'utf8'));
   const version = json('package.json').version;
@@ -11,7 +16,7 @@ export function checkVersions(root = new URL('../', import.meta.url), tag = '') 
     json('package-lock.json').version,
     json('package-lock.json').packages[''].version,
     cargo.match(/^version = "([^"]+)"/m)?.[1],
-    lock.match(/name = "apiforge"\r?\nversion = "([^"]+)"/)?.[1],
+    extractCargoLockVersion(lock),
   ];
   if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version) || versions.some((value) => value !== version)) {
     throw new Error(`Version mismatch: package=${version}, manifests/locks=${versions.join(', ')}`);

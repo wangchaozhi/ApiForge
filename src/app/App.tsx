@@ -1,3 +1,8 @@
+import { SsePanel } from '../features/sse/SsePanel.tsx';
+import { WebSocketPanel } from '../features/websocket/WebSocketPanel.tsx';
+import { GrpcPanel } from '../features/grpc/GrpcPanel.tsx';
+import { GraphqlPanel } from '../features/graphql/GraphqlPanel.tsx';
+import { RunnerPanel } from '../features/runner/RunnerPanel.tsx';
 import { translate as t } from '../i18n/index.ts';
 import { CookieManagerPanel } from '../features/cookies/CookieManagerPanel.tsx';
 import { EnvironmentPanel } from '../features/environments/EnvironmentPanel.tsx';
@@ -13,6 +18,8 @@ import { useAppStore } from '../store/appStore.ts';
 export default function App() {
   useAppLifecycle();
   const activeView = useAppStore((state) => state.activeView);
+  const activeEnvironmentId = useAppStore((state) => state.activeEnvironmentId);
+  const activeEnvironmentName = useAppStore((state) => state.environmentProfiles.find((profile) => profile.id === activeEnvironmentId)?.name ?? 'Default');
   const activeRequestId = useAppStore((state) => state.activeRequestId);
 
   return (
@@ -22,7 +29,7 @@ export default function App() {
         <header className="topbar">
           <div className="environment-chip">
             <span className="environment-dot" />
-            {t("ApiForge Desktop")}
+            {activeEnvironmentName}
           </div>
           <div className="topbar-hint">{t('Variables support {syntax} syntax', { syntax: '{{name}}' })}</div>
         </header>
@@ -39,6 +46,11 @@ export default function App() {
             )}
           </div>
         )}
+        {activeView === 'runner' && <RunnerPanel />}
+        {activeView === 'graphql' && <GraphqlPanel />}
+        {activeView === 'grpc' && <GrpcPanel />}
+        {activeView === 'websocket' && <WebSocketPanel />}
+        {activeView === 'sse' && <SsePanel />}
         {activeView === 'history' && <HistoryPanel />}
         {activeView === 'environments' && <EnvironmentPanel />}
         {activeView === 'cookies' && <CookieManagerPanel />}

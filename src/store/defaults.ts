@@ -1,7 +1,8 @@
+import type { EnvironmentProfile } from '../domain/environment.ts';
 import { translate as t } from '../i18n/index.ts';
 import { createId } from '../lib/id.ts';
 import type { ApiCollection } from '../domain/workspace.ts';
-import type { ApiRequest, KeyValue, MultipartField } from '../domain/request.ts';
+import type { ApiRequest, AuthConfig, KeyValue, MultipartField } from '../domain/request.ts';
 import type { RequestRuntime } from '../domain/response.ts';
 import type { NetworkSettings } from '../domain/network.ts';
 
@@ -21,6 +22,12 @@ export const defaultNetworkSettings: NetworkSettings = {
   cookiesEnabled: true,
   useSystemProxy: true,
   proxyUrl: '',
+  proxyUsername: '',
+  proxyPassword: '',
+  clientCertificateType: 'none',
+  clientCertificatePath: '',
+  clientKeyPath: '',
+  clientCertificatePassword: '',
 };
 
 export const emptyRuntime = (): RequestRuntime => ({ response: null, error: null, sending: false, operationId: null });
@@ -41,10 +48,21 @@ export function newRequest(name = t("Untitled Request")): ApiRequest {
   };
 }
 
+function normalizeAuth(auth: AuthConfig | undefined): AuthConfig {
+  if (!auth) return { type: 'none' };
+  if (auth.type === 'oauth2') return {
+    ...auth,
+    redirectUri: auth.redirectUri ?? '',
+    refreshToken: auth.refreshToken ?? '',
+    expiresAt: auth.expiresAt ?? null,
+  };
+  return auth;
+}
+
 export function normalizeRequest(request: ApiRequest): ApiRequest {
   return {
     ...request,
-    auth: request.auth ?? { type: 'none' },
+    auth: normalizeAuth(request.auth),
     formFields: request.formFields?.length ? request.formFields : [emptyRow()],
     multipartFields: request.multipartFields?.length ? request.multipartFields : [emptyMultipartRow()],
   };
@@ -76,5 +94,11 @@ export function createStarterWorkspace() {
     folders: [],
   };
 
-  return { starterRequest, starterCollection };
+  const starterEnvironment: EnvironmentProfile = {
+    id: createId('env'),
+    name: 'Default',
+    variables: { name: { value: 'ApiForge', secret: false } },
+  };
+
+  return { starterRequest, starterCollection, starterEnvironment };
 }

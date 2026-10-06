@@ -11,4 +11,4 @@ export type ApiCollection = {
   folders: ApiFolder[];
 };
 
-export type WorkspaceView = 'collections' | 'history' | 'environments' | 'cookies' | 'settings';
+export type WorkspaceView = 'collections' | 'runner' | 'graphql' | 'grpc' | 'websocket' | 'sse' | 'history' | 'environments' | 'cookies' | 'settings';
