@@ -13,6 +13,7 @@ schema, cookie filename, and import/export formats compatible with v0.5 workspac
 | `src/services/http/` | Pure request construction, browser and agent HTTP adapters, desktop/agent/browser dispatch |
 | `src/services/curl/` | Shell tokenization, cURL import and export |
 | `src/services/openapi/` | Schema examples/references, security, bodies, URL mapping and import orchestration |
+| `src/services/graphql/` | GraphQL lexer, formatter, introspection model and schema-driven completion |
 | `src/services/history.ts` | History entry construction and desktop/browser persistence |
 | `src/services/cookies.ts` | Desktop cookie commands and browser fallback |
 | `src/platform/` | Runtime detection and the per-browser agent connection (`apiforge-agent-v1`) |
@@ -96,6 +97,7 @@ files) in `src-tauri` and network-facing concerns (auth, CORS, routing) in `agen
 | `state.rs` | Shared cookie jar and cancellation registry initialization |
 | `cookies.rs` | Cookie enumeration, mutation and disk persistence |
 | `database.rs` | SQLite initialization and bounded history storage |
+| `transport.rs` | Raw TCP/TLS for WebSocket and gRPC: HTTP CONNECT proxy tunnelling, TLS verification, client certificates |
 
 Commands remain `send_request`, `cancel_request`, `clear_cookie_jar`, `list_cookies`,
 `remove_cookie`, `save_history`, `list_history`, and `clear_history`, plus script, SSE, WebSocket and gRPC commands.

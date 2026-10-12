@@ -124,3 +124,45 @@
 .grpc-editor textarea { min-height: 0; flex: 1; resize: none; border: 0; outline: 0; padding: 12px; background: #101318; color: #cbd1da; font: 10px/1.55 "SFMono-Regular", Consolas, monospace; }
 .grpc-response { grid-column: 1 / span 2; }
 .grpc-response > pre:not(.graphql-error) { min-height: 0; flex: 1; margin: 0; overflow: auto; padding: 12px; background: #101318; color: #bfc7d2; white-space: pre-wrap; font: 10px/1.55 "SFMono-Regular", Consolas, monospace; }
+
+.websocket-counters { display: flex; align-items: center; gap: 10px; color: #7e8795; font-size: 9.5px; }
+.websocket-counters > span { display: inline-flex; align-items: center; gap: 3px; font-variant-numeric: tabular-nums; }
+.websocket-composer select { height: 28px; border: 1px solid var(--border); border-radius: 5px; background: #101319; color: #c6ccd5; padding: 0 6px; font-size: 9.5px; }
+.sse-event-card.websocket-out header svg { color: #6f9fd8; }
+.sse-event-card.websocket-in header svg { color: #63b37f; }
+.grpc-header-actions { display: flex; gap: 7px; }
+.grpc-editor .graphql-section-heading, .grpc-response .graphql-response-heading { gap: 8px; }
+.grpc-page .graphql-section-heading > span, .grpc-page .graphql-response-heading > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #788290; font-size: 9px; }
+.grpc-editor .graphql-section-heading > button, .grpc-response .graphql-response-heading > button { margin-left: auto; flex-shrink: 0; }
+.grpc-stream-actions { flex-shrink: 0; display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-top: 1px solid var(--border-soft); background: #15181e; color: #7e8795; font-size: 9px; }
+.grpc-stream-actions > span { margin-right: auto; min-width: 0; }
+.grpc-response .sse-event-list { min-height: 0; flex: 1; }
+.sse-event-card.grpc-headers header strong, .sse-event-card.grpc-trailers header strong { color: #8f9bab; }
+.websocket-page .sse-stream-toolbar > strong { padding-left: 12px; color: #d0d5dd; font-size: 10px; }
+
+.graphql-heading-actions { display: flex; align-items: center; gap: 7px; }
+.graphql-section-heading > button { flex-shrink: 0; }
+.graphql-schema-title { min-width: 0; display: flex; align-items: center; gap: 8px; color: #d0d5de; font: 10px "SFMono-Regular", Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.graphql-schema-title span { color: #748091; font: 8px system-ui, sans-serif; text-transform: uppercase; letter-spacing: .55px; }
+.graphql-schema-roots { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
+.graphql-schema-type { cursor: pointer; }
+.graphql-schema-type:hover, .graphql-schema-type:focus-visible { border-color: #3e4655; outline: 0; }
+.graphql-type-link { padding: 0; border: 0; background: none; color: #8fb3e3; font: inherit; cursor: pointer; }
+.graphql-schema-roots .graphql-type-link, .graphql-detail-group > .graphql-type-link { padding: 3px 6px; border-radius: 4px; background: #0e1116; font: 9px "SFMono-Regular", Consolas, monospace; margin: 0 5px 5px 0; }
+.graphql-type-link:hover:not(:disabled) { text-decoration: underline; }
+.graphql-type-link:disabled { color: inherit; cursor: default; }
+.graphql-type-description { margin: 0 0 10px; color: #8a94a2; font-size: 9.5px; line-height: 1.5; }
+.graphql-detail-group { margin-bottom: 12px; }
+.graphql-detail-group h4 { margin: 0 0 6px; color: #748091; font-size: 8.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .55px; }
+.graphql-field { padding: 7px 9px; border: 1px solid var(--border-soft); border-radius: 6px; background: #12151a; margin-bottom: 5px; }
+.graphql-field.deprecated .graphql-field-signature strong { text-decoration: line-through; color: #8a919c; }
+.graphql-field-signature { color: #a3adbb; font: 9.5px/1.5 "SFMono-Regular", Consolas, monospace; word-break: break-word; }
+.graphql-field-signature strong { color: #d0d5de; font-weight: 600; }
+.graphql-field p { margin: 4px 0 0; color: #7d8795; font-size: 9px; line-height: 1.45; }
+.graphql-field p.graphql-deprecation { color: #c49a5b; }
+
+.sse-stats { flex-shrink: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 10px; margin: 0; padding: 9px 11px; border-top: 1px solid var(--border-soft); background: #15181e; }
+.sse-stats div { min-width: 0; }
+.sse-stats .sse-stats-wide { grid-column: 1 / -1; }
+.sse-stats dt { color: #748091; font-size: 8px; text-transform: uppercase; letter-spacing: .5px; }
+.sse-stats dd { margin: 2px 0 0; color: #cfd4dc; font: 10px "SFMono-Regular", Consolas, monospace; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -20,9 +20,11 @@ base64 = "0.23.1"
 cookie_store = "0.22.1"
 reqwest = { version = "0.13.5", features = ["json", "form", "multipart", "stream", "cookies", "native-tls"] }
 futures-util = "0.3.31"
-native-tls = "0.2.18"
+native-tls = { version = "0.2.18", features = ["alpn"] }
 prost = "0.14.4"
 prost-reflect = { version = "0.16.5", features = ["serde"] }
+protox = "0.10.0"
+hyper-util = { version = "0.1.20", features = ["tokio"] }
 reqwest_cookie_store = "0.10.0"
 rusqlite = { version = "0.40.2", features = ["bundled"] }
 serde = { version = "1.0.229", features = ["derive"] }
@@ -33,10 +35,17 @@ tauri-plugin-stronghold = "2.3.2"
 tauri-plugin-updater = "2.12.0"
 tauri-plugin-process = "2.3.1"
 thiserror = "2.0.20"
-tokio = { version = "1.53.1", features = ["macros", "sync"] }
+tokio = { version = "1.53.1", features = ["macros", "sync", "net", "io-util", "time"] }
+tokio-native-tls = "0.3.1"
 tokio-util = { version = "0.7.19", features = ["rt"] }
 tokio-tungstenite = { version = "0.28.0", features = ["native-tls"] }
-tonic = { version = "0.14.6", features = ["transport", "tls-native-roots"] }
+tonic = { version = "0.14.6", features = ["transport"] }
+tower = { version = "0.5.3", features = ["util"] }
+
+[dev-dependencies]
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "net", "io-util", "time"] }
+tokio-stream = { version = "0.1.19", features = ["net"] }
+tonic = { version = "0.14.6", features = ["server", "router"] }
 
 [profile.dev.package.scrypt]
 opt-level = 3
