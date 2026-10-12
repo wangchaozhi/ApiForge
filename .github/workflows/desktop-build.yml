@@ -45,11 +45,12 @@ jobs:
           - name: macos-arm64
             os: macos-latest
             target: aarch64-apple-darwin
-            bundles: dmg
+            # `app` produces the .app.tar.gz the updater downloads.
+            bundles: app,dmg
           - name: macos-x64
             os: macos-latest
             target: x86_64-apple-darwin
-            bundles: dmg
+            bundles: app,dmg
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:

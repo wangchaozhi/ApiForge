@@ -3,7 +3,8 @@ import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// Each bundle type lives in its own directory under target/<triple>/release/bundle.
+// Each installer type lives in its own directory under target/<triple>/release/bundle.
+// The macOS `app` target is not an installer; it yields the updater archive in bundle/macos.
 const BUNDLES = {
   appimage: { dir: 'appimage', extension: '.AppImage' },
   deb: { dir: 'deb', extension: '.deb' },
@@ -37,6 +38,7 @@ export function archLabel(target) {
 export async function collectArtifacts({ bundleRoot, outDir, target, platform, bundles, version }) {
   const copies = [];
   for (const bundle of bundles) {
+    if (bundle === 'app') continue;
     const spec = BUNDLES[bundle];
     if (!spec) throw new Error(`Unknown bundle type: ${bundle}`);
     const dir = join(bundleRoot, spec.dir);
@@ -49,7 +51,7 @@ export async function collectArtifacts({ bundleRoot, outDir, target, platform, b
     }
   }
 
-  if (bundles.includes('dmg')) {
+  if (bundles.includes('app')) {
     const dir = join(bundleRoot, 'macos');
     const files = await listFiles(dir);
     const archive = files.find((file) => file.endsWith('.app.tar.gz'));
