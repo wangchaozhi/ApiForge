@@ -1,26 +1,37 @@
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const [root, tag, baseUrl] = process.argv.slice(2);
-if (!root || !tag || !baseUrl) throw new Error('Expected artifact root, tag and release URL');
-const version = tag.replace(/^v/, '');
-const files = await readdir(root);
-const candidates = files.filter((file) => file.endsWith('.sig'));
-const platforms = {};
-const mappings = [
-  ['darwin-aarch64', /aarch64.*\.app\.tar\.gz\.sig$/i],
-  ['darwin-x86_64', /x64.*\.app\.tar\.gz\.sig$|x86_64.*\.app\.tar\.gz\.sig$/i],
+// Tauri v2 updater artifacts: macOS uses the .app.tar.gz archive, Linux the AppImage and
+// Windows the NSIS installer itself (each with a detached minisign .sig).
+export const UPDATER_PLATFORMS = [
+  ['darwin-aarch64', /_aarch64\.app\.tar\.gz\.sig$/i],
+  ['darwin-x86_64', /_x64\.app\.tar\.gz\.sig$/i],
   ['linux-x86_64', /\.AppImage\.sig$/i],
-  ['windows-x86_64', /x64.*\.(?:nsis|msi)\.zip\.sig$|x86_64.*\.(?:nsis|msi)\.zip\.sig$/i],
+  ['windows-x86_64', /x64-setup\.exe\.sig$/i],
 ];
-for (const [platform, pattern] of mappings) {
-  const signatureFile = candidates.find((file) => pattern.test(file));
-  if (!signatureFile) throw new Error(`Missing updater signature for ${platform}`);
-  const archive = basename(signatureFile, '.sig');
-  platforms[platform] = {
-    signature: (await readFile(join(root, signatureFile), 'utf8')).trim(),
-    url: `${baseUrl}/${encodeURIComponent(archive)}`,
-  };
+
+export async function createUpdateManifest(root, tag, baseUrl, now = new Date()) {
+  const version = tag.replace(/^v/, '');
+  const signatures = (await readdir(root)).filter((file) => file.endsWith('.sig'));
+  const platforms = {};
+  for (const [platform, pattern] of UPDATER_PLATFORMS) {
+    const signatureFile = signatures.find((file) => pattern.test(file));
+    if (!signatureFile) throw new Error(`Missing updater signature for ${platform}`);
+    const archive = basename(signatureFile, '.sig');
+    platforms[platform] = {
+      signature: (await readFile(join(root, signatureFile), 'utf8')).trim(),
+      url: `${baseUrl}/${encodeURIComponent(archive)}`,
+    };
+  }
+  const manifest = { version, notes: `ApiForge ${tag}`, pub_date: now.toISOString(), platforms };
+  await writeFile(join(root, 'latest.json'), JSON.stringify(manifest, null, 2));
+  return manifest;
 }
-await writeFile(join(root, 'latest.json'), JSON.stringify({ version, notes: `ApiForge ${tag}`, pub_date: new Date().toISOString(), platforms }, null, 2));
-console.log(`Created signed update manifest for ${version}.`);
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const [root, tag, baseUrl] = process.argv.slice(2);
+  if (!root || !tag || !baseUrl) throw new Error('Expected artifact root, tag and release URL');
+  const manifest = await createUpdateManifest(root, tag, baseUrl);
+  console.log(`Created signed update manifest for ${manifest.version}: ${Object.keys(manifest.platforms).join(', ')}.`);
+}
