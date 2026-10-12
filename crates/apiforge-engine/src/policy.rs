@@ -54,15 +54,14 @@ impl ExecutionPolicy {
     /// Reject a request before any network activity when it needs something the policy forbids.
     pub fn check_request(&self, request: &EngineRequest) -> Result<(), EngineError> {
         if !self.allow_filesystem {
-            if let EngineBody::Multipart { fields } = &request.body {
-                if fields
+            if let EngineBody::Multipart { fields } = &request.body
+                && fields
                     .iter()
                     .any(|field| field.kind == "file" && !field.value.trim().is_empty())
-                {
-                    return Err(EngineError::Policy(
-                        "multipart file uploads from local paths are disabled".into(),
-                    ));
-                }
+            {
+                return Err(EngineError::Policy(
+                    "multipart file uploads from local paths are disabled".into(),
+                ));
             }
             let certificate_type = request.network.client_certificate_type.as_str();
             if !certificate_type.is_empty() && certificate_type != "none" {

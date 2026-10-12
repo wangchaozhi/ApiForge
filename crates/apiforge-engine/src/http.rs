@@ -125,10 +125,10 @@ pub fn configure_client(
         .tls_danger_accept_invalid_certs(!network.verify_tls)
         .user_agent(USER_AGENT);
 
-    if network.cookies_enabled {
-        if let Some(cookie_jar) = cookie_jar {
-            builder = builder.cookie_provider(cookie_jar);
-        }
+    if network.cookies_enabled
+        && let Some(cookie_jar) = cookie_jar
+    {
+        builder = builder.cookie_provider(cookie_jar);
     }
 
     let proxy_url = network.proxy_url.trim();
