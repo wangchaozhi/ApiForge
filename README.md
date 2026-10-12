@@ -2,6 +2,11 @@
 
 ApiForge is a local-first desktop API client inspired by Postman and Insomnia. It uses Tauri 2 for the desktop shell, React + TypeScript for the UI, Rust + reqwest for the native HTTP engine, and SQLite for request history.
 
+The same UI also runs as a **web app**. Requests from the browser go through
+`apiforge-agent`, which uses the desktop app's Rust engine, so the web build is not limited
+by CORS or forbidden headers. Run it on your own machine to reach localhost and intranet
+APIs, or deploy it in relay mode next to a hosted UI. See [ApiForge on the web](docs/WEB.md).
+
 ## Current main (1.0.0)
 
 All development continues directly on `main`. The v0.7/v0.8 protocol, runner, authentication and environment work, v1.0 update/persistence work, and modular architecture refactor are integrated here. See [Module architecture](docs/ARCHITECTURE.md) and [release signing requirements](RELEASE_SECURITY.md).
@@ -103,12 +108,15 @@ npm install
 npm run tauri dev
 ```
 
-For frontend-only development:
+For the web app with a local request agent (see [docs/WEB.md](docs/WEB.md)):
 
 ```bash
 npm install
-npm run dev
+npm run agent   # prints the agent URL and token
+npm run dev     # then Settings → Request agent
 ```
+
+`npm run agent:web` builds the UI and serves it from the agent in one process.
 
 Validate the frontend and Rust code:
 
@@ -118,6 +126,10 @@ npm run build
 
 cd src-tauri
 cargo check
+cd ..
+
+cargo test --manifest-path crates/apiforge-engine/Cargo.toml
+cargo test --manifest-path agent/Cargo.toml --locked
 ```
 
 ## Architecture
@@ -154,7 +166,8 @@ The request data model remains independent from the UI so a future CLI, Collecti
 - Multipart file fields store local file paths in the request definition. Review them before sharing workspace data.
 - Disabling TLS certificate verification is intended only for trusted development/test endpoints.
 - Cookie values may contain credentials/session tokens. The desktop Cookie Store is persisted in the application data directory; treat that profile data as sensitive.
-- Browser-only mode is subject to browser CORS/security rules and cannot enumerate ApiForge's native Cookie Store. Native proxy, TLS overrides, desktop cookie inspection, persistence, and file-path multipart upload require the Tauri runtime.
+- Browser-only mode (no agent) is subject to browser CORS/security rules. With a local `apiforge-agent`, HTTP requests get the desktop engine's proxy, TLS, Digest auth and header handling; SSE/WebSocket/gRPC, scripts, the Cookie Manager, SQLite history and file pickers still require the Tauri runtime.
+- `apiforge-agent` requires a bearer token on every request. Relay mode refuses private/loopback destinations, local files and proxies; see [docs/WEB.md](docs/WEB.md) before exposing it.
 
 ## Languages
 
@@ -170,8 +183,8 @@ remain literal. `npm test` checks language resolution and placeholder parity.
 
 ## CI and releases
 
-The toolchain is pinned to Rust **1.98.1** in `rust-toolchain.toml`. Commit both
-`package-lock.json` and `src-tauri/Cargo.lock`; CI uses `npm ci` and locked Cargo builds.
+The toolchain is pinned to Rust **1.98.1** in `rust-toolchain.toml`. Commit
+`package-lock.json`, `src-tauri/Cargo.lock` and `agent/Cargo.lock`; CI uses `npm ci` and locked Cargo builds.
 Pushes to `main` and pull requests run frontend validation and the same installer
 build matrix used by releases:
 

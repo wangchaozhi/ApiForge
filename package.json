@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "check": "tsc -b --pretty false",
     "tauri": "tauri",
+    "agent": "cargo run --manifest-path agent/Cargo.toml --",
+    "agent:web": "npm run build && cargo run --release --manifest-path agent/Cargo.toml -- --static-dir dist",
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {

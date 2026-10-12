@@ -10,12 +10,12 @@ schema, cookie filename, and import/export formats compatible with v0.5 workspac
 | --- | --- |
 | `src/app/` | Application composition, navigation, language/history lifecycle |
 | `src/domain/` | Request, response, engine, workspace, network, history and cookie types |
-| `src/services/http/` | Pure request construction, browser HTTP adapter, desktop/browser dispatch |
+| `src/services/http/` | Pure request construction, browser and agent HTTP adapters, desktop/agent/browser dispatch |
 | `src/services/curl/` | Shell tokenization, cURL import and export |
 | `src/services/openapi/` | Schema examples/references, security, bodies, URL mapping and import orchestration |
 | `src/services/history.ts` | History entry construction and desktop/browser persistence |
 | `src/services/cookies.ts` | Desktop cookie commands and browser fallback |
-| `src/platform/` | Runtime detection |
+| `src/platform/` | Runtime detection and the per-browser agent connection (`apiforge-agent-v1`) |
 | `src/store/` | Typed workspace actions, initial data, collection helpers and persistence |
 | `src/features/` | Collections, requests, responses, protocols, runner, history, environments, cookies and settings UI |
 | `src/shared/` | Reusable fields, Monaco component/runtime and shared styles |
@@ -65,6 +65,23 @@ Feature styles live beside their feature; common primitives live in `shared/styl
 CSS cascade. Do not import the same feature stylesheet again from a component.
 Cross-feature responsive adjustments remain in `src/styles/responsive-*.css`.
 
+## Request engines
+
+`services/http/transport.ts` chooses one engine per request: the Tauri `send_request`
+command in the desktop app, otherwise `services/http/agent.ts` when Settings → Request
+agent is enabled with a URL and token, otherwise the `window.fetch` adapter. All three
+accept the same `EngineRequest` and return the same `ApiResponse`.
+
+| Crate | Responsibility |
+| --- | --- |
+| `crates/apiforge-engine` | Shared models, request execution, body encoding, digest auth, TLS/proxy/redirects, and `ExecutionPolicy` (`trusted` vs. `relay` SSRF/file/proxy guards) |
+| `src-tauri` | Desktop IPC adapter; runs the engine with the trusted policy and persists cookies |
+| `agent` | `apiforge-agent` HTTP server: token auth, CORS, cancellation registry, optional static web hosting |
+
+The engine has no Tauri dependency. Keep desktop-only state (SQLite, Stronghold, cookie
+files) in `src-tauri` and network-facing concerns (auth, CORS, routing) in `agent`.
+[ApiForge on the web](WEB.md) documents agent modes and the HTTP API.
+
 ## Native backend
 
 | Module | Responsibility |
@@ -75,15 +92,15 @@ Cross-feature responsive adjustments remain in `src/styles/responsive-*.css`.
 | `commands/history.rs` | History IPC wrappers |
 | `models.rs` | Serialized IPC contracts |
 | `error.rs` | Typed errors and frontend error serialization |
-| `http.rs` | reqwest execution, body encoding, proxy/TLS/redirect behavior |
+| `http.rs` | Adapter over `apiforge-engine`; persists the cookie jar after requests |
 | `state.rs` | Shared cookie jar and cancellation registry initialization |
 | `cookies.rs` | Cookie enumeration, mutation and disk persistence |
 | `database.rs` | SQLite initialization and bounded history storage |
 
 Commands remain `send_request`, `cancel_request`, `clear_cookie_jar`, `list_cookies`,
 `remove_cookie`, `save_history`, `list_history`, and `clear_history`, plus script, SSE, WebSocket and gRPC commands.
-Protocol implementations live in `sse.rs`, `websocket.rs`, `grpc.rs`, `script.rs` and
-`digest.rs`; they use the shared models, errors and HTTP state. SQLite remains
+Protocol implementations live in `sse.rs`, `websocket.rs`, `grpc.rs` and `script.rs`
+(digest auth lives in the engine crate); they use the shared models, errors and HTTP state. SQLite remains
 `apiforge.sqlite3`; cookies remain `cookies.json` under the app data directory.
 Database methods operate without Tauri command state, allowing in-memory database tests.
 
@@ -95,6 +112,10 @@ npm test
 npm run build
 cargo fmt --all --manifest-path src-tauri/Cargo.toml -- --check
 cargo test --locked --manifest-path src-tauri/Cargo.toml
+cargo fmt --manifest-path crates/apiforge-engine/Cargo.toml -- --check
+cargo test --manifest-path crates/apiforge-engine/Cargo.toml
+cargo fmt --manifest-path agent/Cargo.toml -- --check
+cargo test --locked --manifest-path agent/Cargo.toml
 node scripts/check-release-version.mjs
 ```
 

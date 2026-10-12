@@ -27,6 +27,22 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
+  agent:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned Rust toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            crates/apiforge-engine -> target
+            agent -> target
+      - run: cargo fmt --manifest-path crates/apiforge-engine/Cargo.toml -- --check
+      - run: cargo fmt --manifest-path agent/Cargo.toml -- --check
+      - run: cargo test --manifest-path crates/apiforge-engine/Cargo.toml
+      - run: cargo test --locked --manifest-path agent/Cargo.toml
+      - run: cargo build --release --locked --manifest-path agent/Cargo.toml
   desktop:
     needs: validate
     uses: ./.github/workflows/desktop-build.yml

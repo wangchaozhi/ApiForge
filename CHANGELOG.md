@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Add a web build request path: `apiforge-agent` (local and relay modes) executes browser requests with the desktop engine, configured in Settings → Request agent.
+- Extract the HTTP engine into the shared `crates/apiforge-engine` crate used by the desktop app and the agent; request errors now include the underlying cause.
+
 - Consolidate upstream protocol/auth/environment and v1.0 update/persistence work on main while preserving module boundaries.
 - Fix GraphQL environment subscriptions causing an infinite render loop.
 
