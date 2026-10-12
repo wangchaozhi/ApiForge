@@ -1,5 +1,4 @@
 use std::fs;
-mod digest;
 mod grpc;
 mod script;
 mod sse;
