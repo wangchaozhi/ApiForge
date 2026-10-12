@@ -1,1 +1,1 @@
-export type EditorLanguage = 'json' | 'plaintext' | 'html' | 'xml' | 'javascript' | 'css';
+export type EditorLanguage = 'json' | 'plaintext' | 'html' | 'xml' | 'javascript' | 'css' | 'graphql';

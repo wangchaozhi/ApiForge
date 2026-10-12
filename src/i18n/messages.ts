@@ -346,7 +346,28 @@ export const zhCN = {
   "Checking…": "检查中…",
   "Updates require the desktop runtime.": "更新功能需要桌面运行时。",
   "ApiForge is up to date.": "ApiForge 已是最新版本。",
-  "Downloading version {version}…": "正在下载版本 {version}…"
+  "Downloading version {version}…": "正在下载版本 {version}…",
+  "Choose an operation name: the query defines several operations.": "请选择操作名称：查询中定义了多个操作。",
+  "Operation name not found in the query.": "查询中找不到该操作名称。",
+  "Schema request returned HTTP {status} without a JSON body.": "Schema 请求返回 HTTP {status}，但响应不是 JSON。",
+  "Operation name (required)": "操作名称（必填）",
+  "Format query": "格式化查询",
+  "Format": "格式化",
+  "Back": "返回",
+  "Implements": "实现接口",
+  "Possible types": "可能的类型",
+  "Fields": "字段",
+  "Deprecated": "已弃用",
+  "Input fields": "输入字段",
+  "Values": "取值",
+  "The server returned 204 No Content; not reconnecting.": "服务器返回 204 No Content，不再重连。",
+  "The server returned HTTP {status}; not reconnecting.": "服务器返回 HTTP {status}，不再重连。",
+  "The response is not text/event-stream ({type}); not reconnecting.": "响应不是 text/event-stream（{type}），不再重连。",
+  "Reconnecting in {seconds}s…": "{seconds} 秒后重连…",
+  "Connected for": "已连接时长",
+  "Bytes received": "已接收字节",
+  "Reconnects": "重连次数",
+  "SSE streaming requires the ApiForge desktop app.": "SSE 流需要 ApiForge 桌面应用。"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;

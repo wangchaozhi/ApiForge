@@ -1,41 +1,22 @@
-import { Braces, RefreshCw, Send, Square } from 'lucide-react';
+import { Braces, Send, Square, WandSparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { translate as t, useLocale } from '../../i18n/index.ts';
 import { createId } from '../../lib/id.ts';
 import { cancelApiRequest, sendApiRequest } from '../../services/http/transport.ts';
 import { toEngineRequest } from '../../services/http/buildRequest.ts';
+import { formatGraphql } from '../../services/graphql/format.ts';
+import { listGraphqlOperations, operationNameProblem } from '../../services/graphql/lexer.ts';
+import { buildIntrospectionQuery, INTROSPECTION_DEPTHS, parseIntrospection, type GraphqlSchema } from '../../services/graphql/schema.ts';
 import { getActiveEnvironmentValues, useAppStore } from '../../store/appStore.ts';
 import type { ApiRequest, KeyValue } from '../../domain/request.ts';
 import type { ApiResponse } from '../../domain/response.ts';
 import { AuthEditor } from '../requests/AuthEditor.tsx';
 import { CodeEditor } from '../../shared/components/CodeEditor.tsx';
 import { KeyValueEditor } from '../../shared/components/KeyValueEditor.tsx';
+import { useGraphqlCompletion } from './completionProvider.ts';
+import { SchemaBrowser } from './SchemaBrowser.tsx';
 
 const row = (key = '', value = '', enabled = true): KeyValue => ({ id: createId('kv'), key, value, enabled });
-
-type SchemaType = {
-  kind: string;
-  name: string;
-  description?: string | null;
-  fields?: Array<{ name: string; description?: string | null }> | null;
-};
-
-const INTROSPECTION_QUERY = `query ApiForgeIntrospection {
-  __schema {
-    queryType { name }
-    mutationType { name }
-    subscriptionType { name }
-    types {
-      kind
-      name
-      description
-      fields(includeDeprecated: true) {
-        name
-        description
-      }
-    }
-  }
-}`;
 
 const starterRequest = (): ApiRequest => ({
   id: createId('graphql'),
@@ -79,26 +60,36 @@ export function GraphqlPanel() {
   const [error, setError] = useState<string | null>(null);
   const [operationId, setOperationId] = useState<string | null>(null);
   const [sideTab, setSideTab] = useState<'headers' | 'auth' | 'schema'>('headers');
-  const [schemaTypes, setSchemaTypes] = useState<SchemaType[]>([]);
-  const [schemaSearch, setSchemaSearch] = useState('');
+  const [schema, setSchema] = useState<GraphqlSchema | null>(null);
+  const [loadingSchema, setLoadingSchema] = useState(false);
+  useGraphqlCompletion(schema);
+  const operationNames = useMemo(
+    () => listGraphqlOperations(query).flatMap((operation) => operation.name ? [operation.name] : []),
+    [query],
+  );
 
   const sending = operationId !== null;
   const responseText = useMemo(() => prettyBody(response), [response]);
-  const filteredSchemaTypes = useMemo(() => {
-    const needle = schemaSearch.trim().toLowerCase();
-    return schemaTypes
-      .filter((type) => !type.name.startsWith('__'))
-      .filter((type) => !needle
-        || type.name.toLowerCase().includes(needle)
-        || (type.description ?? '').toLowerCase().includes(needle)
-        || (type.fields ?? []).some((field) => field.name.toLowerCase().includes(needle)));
-  }, [schemaSearch, schemaTypes]);
-
   const updateRequest = (updater: (current: ApiRequest) => ApiRequest) => {
     setRequest((current) => updater(current));
   };
 
+  const formatQuery = () => setQuery(formatGraphql(query));
+
+  const formatVariables = () => {
+    try {
+      setGraphqlVariables(JSON.stringify(JSON.parse(graphqlVariables || '{}'), null, 2));
+    } catch {
+      setError(t('GraphQL variables must be valid JSON.'));
+    }
+  };
+
   const send = async () => {
+    const operationProblem = operationNameProblem(query, operationName);
+    if (operationProblem) {
+      setError(t(operationProblem));
+      return;
+    }
     let parsedVariables: unknown = {};
     try {
       parsedVariables = graphqlVariables.trim() ? JSON.parse(graphqlVariables) : {};
@@ -139,27 +130,40 @@ export function GraphqlPanel() {
   const loadSchema = async () => {
     const nextOperationId = createId('graphql-schema');
     setOperationId(nextOperationId);
+    setLoadingSchema(true);
     setError(null);
     try {
-      const engineRequest = toEngineRequest({
-        ...request,
-        method: 'POST',
-        bodyType: 'json',
-        body: JSON.stringify({ query: INTROSPECTION_QUERY, variables: {} }),
-      }, variables, networkSettings);
-      const nextResponse = await sendApiRequest(engineRequest, nextOperationId);
-      const payload = JSON.parse(nextResponse.body) as {
-        data?: { __schema?: { types?: SchemaType[] } };
-        errors?: Array<{ message?: string }>;
-      };
-      if (payload.errors?.length) {
-        throw new Error(payload.errors.map((item) => item.message ?? t('GraphQL schema request failed.')).join('\n'));
+      let lastError: unknown;
+      let loaded: GraphqlSchema | null = null;
+      for (const depth of INTROSPECTION_DEPTHS) {
+        const engineRequest = toEngineRequest({
+          ...request,
+          method: 'POST',
+          bodyType: 'json',
+          body: JSON.stringify({ query: buildIntrospectionQuery(depth), variables: {} }),
+        }, variables, networkSettings);
+        const nextResponse = await sendApiRequest(engineRequest, nextOperationId);
+        try {
+          let payload: unknown;
+          try {
+            payload = JSON.parse(nextResponse.body);
+          } catch {
+            throw new Error(t('Schema request returned HTTP {status} without a JSON body.', { status: nextResponse.status }));
+          }
+          loaded = parseIntrospection(payload);
+          break;
+        } catch (cause) {
+          // Retry with shallower type references for servers that limit query depth.
+          lastError = cause;
+        }
       }
-      setSchemaTypes(payload.data?.__schema?.types ?? []);
+      if (!loaded) throw lastError;
+      setSchema(loaded);
       setSideTab('schema');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
+      setLoadingSchema(false);
       setOperationId(null);
     }
   };
@@ -194,18 +198,23 @@ export function GraphqlPanel() {
         <div className="graphql-editor-column">
           <div className="graphql-section-heading">
             <strong>{t('Query')}</strong>
-            <input
-              value={operationName}
-              onChange={(event) => setOperationName(event.target.value)}
-              placeholder={t('Operation name (optional)')}
-              spellCheck={false}
-            />
+            <div className="graphql-heading-actions">
+              <input
+                value={operationName}
+                onChange={(event) => setOperationName(event.target.value)}
+                placeholder={operationNames.length > 1 ? t('Operation name (required)') : t('Operation name (optional)')}
+                list="graphql-operation-names"
+                spellCheck={false}
+              />
+              <datalist id="graphql-operation-names">{operationNames.map((name) => <option key={name} value={name} />)}</datalist>
+              <button className="secondary-button compact" onClick={formatQuery} title={t('Format query')}><WandSparkles size={13} />{t('Format')}</button>
+            </div>
           </div>
-          <CodeEditor value={query} language="plaintext" height="100%" onChange={setQuery} />
+          <CodeEditor value={query} language="graphql" height="100%" onChange={setQuery} />
         </div>
 
         <div className="graphql-editor-column">
-          <div className="graphql-section-heading"><strong>{t('Variables')}</strong></div>
+          <div className="graphql-section-heading"><strong>{t('Variables')}</strong><button className="secondary-button compact" onClick={formatVariables}><Braces size={13} />{t('Format')}</button></div>
           <CodeEditor value={graphqlVariables} language="json" height="100%" onChange={setGraphqlVariables} />
         </div>
 
@@ -229,42 +238,7 @@ export function GraphqlPanel() {
               />
             )}
             {sideTab === 'schema' && (
-              <div className="graphql-schema">
-                <div className="graphql-schema-toolbar">
-                  <button className="secondary-button compact" disabled={sending} onClick={() => void loadSchema()}>
-                    <RefreshCw size={13} className={sending ? 'spin' : ''} /> {t('Load schema')}
-                  </button>
-                  <input
-                    value={schemaSearch}
-                    onChange={(event) => setSchemaSearch(event.target.value)}
-                    placeholder={t('Search schema')}
-                    spellCheck={false}
-                  />
-                </div>
-                {schemaTypes.length === 0 ? (
-                  <div className="page-empty">
-                    <strong>{t('No schema loaded')}</strong>
-                    <span>{t('Run GraphQL introspection to browse types and fields.')}</span>
-                  </div>
-                ) : (
-                  <div className="graphql-schema-list">
-                    {filteredSchemaTypes.map((type) => (
-                      <article className="graphql-schema-type" key={type.name}>
-                        <header>
-                          <strong>{type.name}</strong>
-                          <span>{type.kind}</span>
-                        </header>
-                        {type.description && <p>{type.description}</p>}
-                        {(type.fields ?? []).length > 0 && (
-                          <div className="graphql-schema-fields">
-                            {(type.fields ?? []).map((field) => <code key={field.name}>{field.name}</code>)}
-                          </div>
-                        )}
-                      </article>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <SchemaBrowser schema={schema} loading={loadingSchema} onLoad={() => void loadSchema()} />
             )}
           </div>
         </div>

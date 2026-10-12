@@ -13,6 +13,7 @@ schema, cookie filename, and import/export formats compatible with v0.5 workspac
 | `src/services/http/` | Pure request construction, browser HTTP adapter, desktop/browser dispatch |
 | `src/services/curl/` | Shell tokenization, cURL import and export |
 | `src/services/openapi/` | Schema examples/references, security, bodies, URL mapping and import orchestration |
+| `src/services/graphql/` | GraphQL lexer, formatter, introspection model and schema-driven completion |
 | `src/services/history.ts` | History entry construction and desktop/browser persistence |
 | `src/services/cookies.ts` | Desktop cookie commands and browser fallback |
 | `src/platform/` | Runtime detection |

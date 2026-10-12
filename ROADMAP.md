@@ -136,21 +136,24 @@ Issues: #6, #7
 - Graceful close handshake (code 1000) and close-code reporting.
 - Remaining: automatic reconnect policy, SOCKS proxies, system-proxy discovery for raw streams.
 
-#### SSE — remaining
+#### SSE — implemented
 
-- Reconnect policy and retry controls.
-- Last-Event-ID reconnect behavior.
-- Connection duration / message counters.
-- Parser and cancellation regression tests.
-- Persistable SSE request definitions if protocol workspaces become part of Collections.
+- Reconnect loop reads live settings; server `retry:` updates the delay mid-session.
+- EventSource stop rules: HTTP 204, non-2xx and non `text/event-stream` responses are fatal.
+- Exponential backoff (capped at 30 s) while attempts keep failing; interruptible retry wait.
+- Last-Event-ID resent on reconnect and reset on each manual connection.
+- Connection duration, event/byte counters, reconnect count and current Last-Event-ID.
+- Parser and reconnect-policy regression tests.
+- Remaining: persistable SSE request definitions if protocol workspaces become part of Collections.
 
-#### GraphQL — remaining
+#### GraphQL — implemented
 
-- Schema-driven autocomplete.
-- Field/argument/type detail panel.
-- Query formatting.
-- Persist GraphQL requests inside Collections.
-- Subscription support, preferably over the WebSocket engine after WebSocket is complete.
+- Full introspection (arguments, type references, input fields, enum values, interfaces, possible types) with automatic fallback for servers that limit query depth.
+- Schema-driven Monaco autocomplete: fields per selection set (aliases, fragments, inline fragments), arguments, enum argument values, type conditions and operation keywords.
+- Type detail browser with clickable type navigation, deprecations and root-type shortcuts.
+- Query formatter and variables formatter; GraphQL syntax highlighting.
+- Operation-name detection and validation for multi-operation documents.
+- Remaining: persist GraphQL requests inside Collections; subscriptions over the WebSocket engine.
 
 #### gRPC — implemented
 

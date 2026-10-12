@@ -172,3 +172,52 @@ export async function streamSse(
 export async function cancelSse(operationId: string) {
   await cancelApiRequest(operationId);
 }
+
+/** Upper bound for exponential backoff after consecutive failed connection attempts. */
+export const MAX_SSE_BACKOFF_MS = 30_000;
+
+export type SseAttemptOutcome = {
+  /** HTTP status of the response, when one arrived. */
+  status?: number;
+  /** Content-Type of the response, when one arrived. */
+  contentType?: string;
+};
+
+export type SseReconnectPolicy = {
+  autoReconnect: boolean;
+  /** The user disconnected. */
+  stopped: boolean;
+  /** Base delay: the user's setting, replaced by the server's latest `retry:` field. */
+  retryMs: number;
+  /** Consecutive attempts that ended without a successful (2xx event-stream) response. */
+  failures: number;
+};
+
+export type SseStopReason = 'noContent' | 'httpStatus' | 'contentType';
+
+export type SseReconnectPlan =
+  | { reconnect: true; delayMs: number }
+  | { reconnect: false; reason?: SseStopReason };
+
+export function isSseResponseOk(outcome: SseAttemptOutcome) {
+  return outcome.status === undefined
+    || (outcome.status >= 200 && outcome.status < 300 && outcome.status !== 204
+      && (outcome.contentType === undefined || outcome.contentType.toLowerCase().includes('text/event-stream')));
+}
+
+/**
+ * Decides whether to reconnect after a stream ends, following the EventSource rules:
+ * HTTP 204, non-2xx statuses and non `text/event-stream` responses are fatal; network
+ * failures and normal stream ends reconnect after the retry delay, backing off
+ * exponentially while attempts keep failing.
+ */
+export function planSseReconnect(outcome: SseAttemptOutcome, policy: SseReconnectPolicy): SseReconnectPlan {
+  if (policy.stopped) return { reconnect: false };
+  if (outcome.status === 204) return { reconnect: false, reason: 'noContent' };
+  if (outcome.status !== undefined && (outcome.status < 200 || outcome.status >= 300)) return { reconnect: false, reason: 'httpStatus' };
+  if (outcome.status !== undefined && !isSseResponseOk(outcome)) return { reconnect: false, reason: 'contentType' };
+  if (!policy.autoReconnect) return { reconnect: false };
+  const base = Math.max(100, policy.retryMs);
+  const delayMs = Math.min(MAX_SSE_BACKOFF_MS, base * 2 ** Math.min(policy.failures, 16));
+  return { reconnect: true, delayMs: Math.max(base, delayMs) };
+}

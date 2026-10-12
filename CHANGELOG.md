@@ -1,5 +1,7 @@
 ## Unreleased
 
+- SSE: EventSource-compliant reconnect (204/non-2xx/content-type are fatal), exponential backoff, live setting changes, Last-Event-ID reset per connection, connection statistics.
+- GraphQL: schema-driven autocomplete, full type browser, query formatting, syntax highlighting, operation-name validation, depth-limit tolerant introspection.
 - WebSocket: proxy (HTTP CONNECT + auth) support, connect timeout and cancellable connects, Base64 binary frames, ping, graceful close handshake, incoming/outgoing timeline.
 - gRPC: `.proto` import, request templates, client/bidirectional streaming, live server-stream timeline, cancellation, `-bin` metadata, headers/trailers, TLS verification toggle, PKCS#12 certificates and proxy support.
 
