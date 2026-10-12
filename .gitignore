@@ -13,3 +13,5 @@ release-artifacts/
 /crates/*/target
 /crates/*/Cargo.lock
 agent/target
+
+src-tauri/tauri.release.conf.json

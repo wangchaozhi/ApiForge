@@ -85,6 +85,16 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN: '1'
         with:
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} -- --locked
+      # The bundler reads the updater public key from the Tauri config (the app gets it at
+      # compile time via APIFORGE_UPDATER_PUBKEY), so release builds merge it in here.
+      - name: Write release Tauri config
+        if: ${{ inputs.release }}
+        shell: bash
+        env:
+          UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+        run: |
+          test -n "$UPDATER_PUBKEY" || { echo "Missing TAURI_UPDATER_PUBKEY repository variable"; exit 1; }
+          node -e "require('fs').writeFileSync('src-tauri/tauri.release.conf.json', JSON.stringify({ bundle: { createUpdaterArtifacts: true }, plugins: { updater: { pubkey: process.env.UPDATER_PUBKEY } } }, null, 2))"
       - name: Build signed updater artifacts
         if: ${{ inputs.release }}
         uses: tauri-apps/tauri-action@v1
@@ -101,7 +111,7 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
-          args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} --config '{"bundle":{"createUpdaterArtifacts":true}}' -- --locked
+          args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} --config ${{ github.workspace }}/src-tauri/tauri.release.conf.json -- --locked
       - name: Collect installers and checksums
         run: node scripts/collect-artifacts.mjs ${{ matrix.target }} ${{ matrix.name }} ${{ matrix.bundles }}
       - uses: actions/upload-artifact@v7
