@@ -95,6 +95,28 @@ jobs:
         run: |
           test -n "$UPDATER_PUBKEY" || { echo "Missing TAURI_UPDATER_PUBKEY repository variable"; exit 1; }
           node -e "require('fs').writeFileSync('src-tauri/tauri.release.conf.json', JSON.stringify({ bundle: { createUpdaterArtifacts: true }, plugins: { updater: { pubkey: process.env.UPDATER_PUBKEY } } }, null, 2))"
+      # Tauri attempts codesigning whenever APPLE_CERTIFICATE is set, even to an empty
+      # string, so the Apple variables are exported only when a certificate is configured.
+      - name: Configure macOS code signing
+        if: ${{ inputs.release && runner.os == 'macOS' }}
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "::warning::macOS code signing secrets are not configured; building unsigned DMGs."
+            exit 0
+          fi
+          for name in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
+            value="${!name}"
+            [ -n "$value" ] || continue
+            { echo "$name<<__APIFORGE_EOF__"; printf '%s\n' "$value"; echo "__APIFORGE_EOF__"; } >> "$GITHUB_ENV"
+          done
       - name: Build signed updater artifacts
         if: ${{ inputs.release }}
         uses: tauri-apps/tauri-action@v1
@@ -104,12 +126,6 @@ jobs:
           APIFORGE_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} --config ${{ github.workspace }}/src-tauri/tauri.release.conf.json -- --locked
       - name: Collect installers and checksums
