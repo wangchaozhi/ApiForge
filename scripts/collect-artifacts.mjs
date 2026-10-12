@@ -51,6 +51,12 @@ export async function collectArtifacts({ bundleRoot, outDir, target, platform, b
     }
   }
 
+  // Optional portable zip packaged by the workflow on Windows.
+  const portableDir = join(bundleRoot, 'portable');
+  for (const file of (await listFiles(portableDir)).filter((name) => name.endsWith('-portable.zip'))) {
+    copies.push([join(portableDir, file), file]);
+  }
+
   if (bundles.includes('app')) {
     const dir = join(bundleRoot, 'macos');
     const files = await listFiles(dir);

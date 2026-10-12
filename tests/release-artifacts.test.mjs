@@ -32,6 +32,7 @@ const layouts = {
     files: {
       'nsis/ApiForge_1.0.0_x64-setup.exe': null, 'nsis/ApiForge_1.0.0_x64-setup.exe.sig': 'sig-windows',
       'msi/ApiForge_1.0.0_x64_en-US.msi': null, 'msi/ApiForge_1.0.0_x64_en-US.msi.sig': 'sig-msi',
+      'portable/ApiForge_1.0.0_x64-portable.zip': null,
     },
   },
   'macos-arm64': {
@@ -76,6 +77,7 @@ test('collected release artifacts pass smoke checks and produce a complete updat
     const names = (await readdir(merged)).sort();
     assert.ok(!names.includes('control.tar.gz') && !names.includes('data.tar.gz'), 'bundler intermediates are skipped');
     assert.ok(names.includes('ApiForge_1.0.0_aarch64.app.tar.gz') && names.includes('ApiForge_1.0.0_x64.app.tar.gz.sig'));
+    assert.ok(names.includes('ApiForge_1.0.0_x64-portable.zip'), 'portable zip is collected');
 
     execFileSync(process.execPath, ['scripts/smoke-artifacts.mjs', merged], { stdio: 'pipe' });
 

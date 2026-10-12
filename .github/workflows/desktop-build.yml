@@ -129,6 +129,19 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} --config ${{ github.workspace }}/src-tauri/tauri.release.conf.json -- --locked
+      # Portable build: the Tauri executable embeds the frontend, so unzipping it is enough
+      # (WebView2 ships with Windows 10/11). Collected from bundle/portable below.
+      - name: Package portable Windows zip
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $release = "src-tauri/target/${{ matrix.target }}/release"
+          $staging = Join-Path $env:RUNNER_TEMP 'ApiForge-portable'
+          $output = "$release/bundle/portable"
+          New-Item -ItemType Directory -Force $staging, $output | Out-Null
+          Copy-Item "$release/apiforge.exe" (Join-Path $staging 'ApiForge.exe')
+          Compress-Archive -Path "$staging/*" -DestinationPath "$output/ApiForge_${version}_x64-portable.zip" -Force
       - name: Collect installers and checksums
         run: node scripts/collect-artifacts.mjs ${{ matrix.target }} ${{ matrix.name }} ${{ matrix.bundles }}
       - uses: actions/upload-artifact@v7

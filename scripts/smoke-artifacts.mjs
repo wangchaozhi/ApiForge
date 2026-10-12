@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 const root = process.argv[2] ?? 'release-artifacts';
 const files = await readdir(root);
-const required = ['.deb', '.rpm', '.AppImage', '.dmg', '.exe', '.msi'];
+const required = ['.deb', '.rpm', '.AppImage', '.dmg', '.exe', '.msi', '-portable.zip'];
 for (const extension of required) {
   const match = files.find((file) => file.endsWith(extension));
   if (!match) throw new Error(`Missing ${extension} installer`);
