@@ -3,6 +3,8 @@ import { translate as t, useLocale } from '../../i18n/index.ts';
 import { AlertCircle, Braces, Code2, Eye, FileJson2, ListTree, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useAppStore } from '../../store/appStore.ts';
+import { useAgentConnectionStore } from '../../platform/agentConnection.ts';
+import { currentRequestEngine } from '../../services/http/transport.ts';
 import { CodeEditor } from '../../shared/components/CodeEditor.tsx';
 
 type Tab = 'pretty' | 'raw' | 'preview' | 'headers';
@@ -24,6 +26,8 @@ export function ResponsePanel() {
   const isImage = Boolean(response && isBinary && contentType.startsWith('image/'));
   const isPdf = Boolean(response && isBinary && contentType.includes('application/pdf'));
   const canPreview = isHtml || isImage || isPdf;
+  useAgentConnectionStore((state) => state.connection);
+  const browserEngine = currentRequestEngine() === 'browser';
   const cancelled = Boolean(error && (error.toLowerCase().includes('cancel') || error.includes('已取消')));
   const searchableText = response && !isBinary ? (tab === 'pretty' ? pretty : response.body) : '';
   const matchCount = useMemo(() => countMatches(searchableText, searchQuery), [searchableText, searchQuery]);
@@ -47,7 +51,7 @@ export function ResponsePanel() {
           <div>
             <strong>{cancelled ? t("Request cancelled") : t("Request failed")}</strong>
             <p>{error}</p>
-            {!cancelled && <small>{t("Tip: browser preview is subject to CORS. Run with Tauri for unrestricted desktop HTTP requests.")}</small>}
+            {!cancelled && browserEngine && <small>{t('Tip: the browser enforces CORS. Enable the request agent in Settings, or use the desktop app, to send requests without browser limits.')}</small>}
           </div>
         </div>
       ) : !response ? (

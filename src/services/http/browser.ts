@@ -84,6 +84,10 @@ export async function sendBrowserRequest(request: EngineRequest, operationId: st
     };
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw new Error(t("Request cancelled."));
+    // fetch reports CORS rejections and unreachable hosts as an opaque TypeError.
+    if (error instanceof TypeError) {
+      throw new Error(t('{message}. The browser may have blocked this request (CORS) or could not reach the host.', { message: error.message.replace(/\.$/, '') }));
+    }
     throw error;
   } finally {
     browserControllers.delete(operationId);
