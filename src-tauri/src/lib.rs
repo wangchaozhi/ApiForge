@@ -3,6 +3,7 @@ mod digest;
 mod grpc;
 mod script;
 mod sse;
+mod transport;
 mod websocket;
 
 mod commands;
@@ -41,6 +42,7 @@ pub fn run() {
             app.manage(database);
             app.manage(HttpState::open(app)?);
             app.manage(websocket::WebSocketState::new());
+            app.manage(grpc::GrpcState::new());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -57,7 +59,9 @@ pub fn run() {
             websocket::start_websocket,
             websocket::send_websocket_message,
             grpc::inspect_grpc_descriptor,
-            grpc::invoke_grpc
+            grpc::start_grpc,
+            grpc::send_grpc_message,
+            grpc::finish_grpc_stream
         ])
         .run(tauri::generate_context!())
         .expect("error while running ApiForge");

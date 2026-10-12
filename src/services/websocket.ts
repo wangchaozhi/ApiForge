@@ -1,12 +1,16 @@
 import type { EngineRequest } from '../domain/engine.ts';
+import type { WebSocketSendKind } from './protocols.ts';
 import { cancelApiRequest } from './http/transport.ts';
 import { isTauriRuntime } from '../platform/runtime.ts';
 
+export { validateOutgoing, type WebSocketSendKind } from './protocols.ts';
+
 export type WebSocketNativeEvent =
-  | { type: 'opened'; operationId: string }
+  | { type: 'opened'; operationId: string; status: number; headers: Record<string, string>; protocol?: string | null }
   | { type: 'message'; operationId: string; data: string; binary: boolean }
+  | { type: 'sent'; operationId: string; data: string; kind: WebSocketSendKind }
   | { type: 'ping' | 'pong'; operationId: string; data: string }
-  | { type: 'closed'; operationId: string; code?: number; reason: string };
+  | { type: 'closed'; operationId: string; code?: number | null; reason: string };
 
 export type WebSocketHandlers = {
   onEvent: (event: WebSocketNativeEvent) => void;
@@ -32,9 +36,9 @@ export async function connectWebSocket(
   }
 }
 
-export async function sendWebSocketMessage(operationId: string, data: string, binary = false) {
+export async function sendWebSocketMessage(operationId: string, data: string, kind: WebSocketSendKind = 'text') {
   const { invoke } = await import('@tauri-apps/api/core');
-  await invoke('send_websocket_message', { operationId, data, binary });
+  await invoke('send_websocket_message', { operationId, data, kind });
 }
 
 export async function disconnectWebSocket(operationId: string) {

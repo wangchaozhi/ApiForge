@@ -1,5 +1,8 @@
 ## Unreleased
 
+- WebSocket: proxy (HTTP CONNECT + auth) support, connect timeout and cancellable connects, Base64 binary frames, ping, graceful close handshake, incoming/outgoing timeline.
+- gRPC: `.proto` import, request templates, client/bidirectional streaming, live server-stream timeline, cancellation, `-bin` metadata, headers/trailers, TLS verification toggle, PKCS#12 certificates and proxy support.
+
 - Consolidate upstream protocol/auth/environment and v1.0 update/persistence work on main while preserving module boundaries.
 - Fix GraphQL environment subscriptions causing an infinite render loop.
 

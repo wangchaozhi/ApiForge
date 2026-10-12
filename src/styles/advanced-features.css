@@ -124,3 +124,18 @@
 .grpc-editor textarea { min-height: 0; flex: 1; resize: none; border: 0; outline: 0; padding: 12px; background: #101318; color: #cbd1da; font: 10px/1.55 "SFMono-Regular", Consolas, monospace; }
 .grpc-response { grid-column: 1 / span 2; }
 .grpc-response > pre:not(.graphql-error) { min-height: 0; flex: 1; margin: 0; overflow: auto; padding: 12px; background: #101318; color: #bfc7d2; white-space: pre-wrap; font: 10px/1.55 "SFMono-Regular", Consolas, monospace; }
+
+.websocket-counters { display: flex; align-items: center; gap: 10px; color: #7e8795; font-size: 9.5px; }
+.websocket-counters > span { display: inline-flex; align-items: center; gap: 3px; font-variant-numeric: tabular-nums; }
+.websocket-composer select { height: 28px; border: 1px solid var(--border); border-radius: 5px; background: #101319; color: #c6ccd5; padding: 0 6px; font-size: 9.5px; }
+.sse-event-card.websocket-out header svg { color: #6f9fd8; }
+.sse-event-card.websocket-in header svg { color: #63b37f; }
+.grpc-header-actions { display: flex; gap: 7px; }
+.grpc-editor .graphql-section-heading, .grpc-response .graphql-response-heading { gap: 8px; }
+.grpc-page .graphql-section-heading > span, .grpc-page .graphql-response-heading > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #788290; font-size: 9px; }
+.grpc-editor .graphql-section-heading > button, .grpc-response .graphql-response-heading > button { margin-left: auto; flex-shrink: 0; }
+.grpc-stream-actions { flex-shrink: 0; display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-top: 1px solid var(--border-soft); background: #15181e; color: #7e8795; font-size: 9px; }
+.grpc-stream-actions > span { margin-right: auto; min-width: 0; }
+.grpc-response .sse-event-list { min-height: 0; flex: 1; }
+.sse-event-card.grpc-headers header strong, .sse-event-card.grpc-trailers header strong { color: #8f9bab; }
+.websocket-page .sse-stream-toolbar > strong { padding-left: 12px; color: #d0d5dd; font-size: 10px; }

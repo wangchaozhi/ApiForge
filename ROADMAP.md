@@ -127,18 +127,14 @@ Issues: #6, #7
 
 ### Not finished yet
 
-#### WebSocket — not started
+#### WebSocket — implemented
 
-- Native WebSocket connection engine.
-- Headers/Auth.
-- TLS/proxy/client-certificate reuse.
-- Text/binary message send.
-- Incoming/outgoing message history.
-- JSON formatting.
-- ping/pong visibility.
-- reconnect controls.
-- cancellation/close semantics.
-- protocol tests.
+- Native engine (tokio-tungstenite) with headers/auth, TLS verification, PKCS#12/PEM client certificates.
+- HTTP CONNECT proxy tunnelling with proxy authentication (shared `transport` module).
+- Connect timeout; Disconnect also aborts a pending connection attempt.
+- Text, Base64 binary, and ping frames; incoming/outgoing timeline with counters and handshake headers.
+- Graceful close handshake (code 1000) and close-code reporting.
+- Remaining: automatic reconnect policy, SOCKS proxies, system-proxy discovery for raw streams.
 
 #### SSE — remaining
 
@@ -156,23 +152,16 @@ Issues: #6, #7
 - Persist GraphQL requests inside Collections.
 - Subscription support, preferably over the WebSocket engine after WebSocket is complete.
 
-#### gRPC — not started
+#### gRPC — implemented
 
-Implement in two phases:
-
-1. gRPC unary:
-   - protobuf import
-   - package/service/method explorer
-   - request JSON editor
-   - metadata
-   - TLS
-   - unary invocation
-2. gRPC streaming:
-   - server streaming
-   - client streaming
-   - bidi streaming
-   - stream cancellation
-   - message timeline
+- `.proto` source import compiled in-process (protox, imports resolved next to the file) and binary descriptor sets.
+- Service/method explorer with generated request JSON templates.
+- Unary, server streaming, client streaming, and bidirectional streaming with a live message timeline.
+- Send/End-stream controls for client streams; cancellation through the shared cancellation model.
+- ASCII and `-bin` (Base64) metadata; response headers and trailers; gRPC status codes in errors.
+- TLS verification, client certificates, and CONNECT proxies through the shared transport.
+- End-to-end tests against an in-process dynamic tonic server, including through a proxy.
+- Remaining: server reflection, persisting gRPC requests in Collections.
 
 ### v0.8 merge gate
 

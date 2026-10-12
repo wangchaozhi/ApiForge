@@ -79,6 +79,7 @@ Cross-feature responsive adjustments remain in `src/styles/responsive-*.css`.
 | `state.rs` | Shared cookie jar and cancellation registry initialization |
 | `cookies.rs` | Cookie enumeration, mutation and disk persistence |
 | `database.rs` | SQLite initialization and bounded history storage |
+| `transport.rs` | Raw TCP/TLS for WebSocket and gRPC: HTTP CONNECT proxy tunnelling, TLS verification, client certificates |
 
 Commands remain `send_request`, `cancel_request`, `clear_cookie_jar`, `list_cookies`,
 `remove_cookie`, `save_history`, `list_history`, and `clear_history`, plus script, SSE, WebSocket and gRPC commands.
