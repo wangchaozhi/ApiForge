@@ -16,3 +16,6 @@
 .warning-toggle:not(:has(input:checked)) strong { color: #f1b56f; }
 .settings-inline-action { min-height: 52px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; }
 .settings-inline-action span { color: #7f8998; font-size: 10px; }
+.agent-status { flex-wrap: wrap; }
+.settings-inline-action .agent-status-ok { color: #8fc79b; }
+.settings-inline-action .agent-status-error { color: #f08a7e; }

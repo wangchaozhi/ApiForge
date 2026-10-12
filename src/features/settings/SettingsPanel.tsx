@@ -6,6 +6,7 @@ import { isTauriRuntime } from '../../platform/runtime.ts';
 import { isSecretVaultUnlocked, loadNetworkSecrets, saveNetworkSecret } from '../../services/secrets.ts';
 import { useAppStore } from '../../store/appStore.ts';
 import { WorkspaceTransferPanel } from './WorkspaceTransferPanel.tsx';
+import { AgentSettingsCard } from './AgentSettingsCard.tsx';
 
 export function SettingsPanel() {
   useLocale();
@@ -90,6 +91,7 @@ export function SettingsPanel() {
           </label>
           <p className="settings-description">{t('Choose the display language. Your workspace data stays unchanged.')}</p>
         </div>
+        {!isTauriRuntime() && <AgentSettingsCard />}
         <WorkspaceTransferPanel />
 
         <div className="settings-card">

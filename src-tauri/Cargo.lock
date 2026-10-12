@@ -107,23 +107,21 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 name = "apiforge"
 version = "1.0.0"
 dependencies = [
+ "apiforge-engine",
  "base64 0.23.1",
  "boa_engine",
  "cookie_store",
  "futures-util",
  "hyper-util",
- "md-5",
  "native-tls",
  "prost",
  "prost-reflect",
  "protox",
- "rand 0.9.5",
  "reqwest",
  "reqwest_cookie_store",
  "rusqlite",
  "serde",
  "serde_json",
- "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
@@ -138,6 +136,22 @@ dependencies = [
  "tokio-util",
  "tonic",
  "tower",
+]
+
+[[package]]
+name = "apiforge-engine"
+version = "1.0.0"
+dependencies = [
+ "base64 0.23.1",
+ "md-5",
+ "rand 0.9.5",
+ "reqwest",
+ "reqwest_cookie_store",
+ "serde",
+ "sha2",
+ "thiserror 2.0.20",
+ "tokio",
+ "url",
 ]
 
 [[package]]

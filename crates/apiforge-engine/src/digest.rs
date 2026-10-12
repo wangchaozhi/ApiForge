@@ -61,7 +61,7 @@ fn quote(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
-pub(crate) fn authorization_header(
+pub fn authorization_header(
     challenge: &str,
     method: &str,
     request_url: &str,

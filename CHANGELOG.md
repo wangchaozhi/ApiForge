@@ -4,6 +4,8 @@
 - GraphQL: schema-driven autocomplete, full type browser, query formatting, syntax highlighting, operation-name validation, depth-limit tolerant introspection.
 - WebSocket: proxy (HTTP CONNECT + auth) support, connect timeout and cancellable connects, Base64 binary frames, ping, graceful close handshake, incoming/outgoing timeline.
 - gRPC: `.proto` import, request templates, client/bidirectional streaming, live server-stream timeline, cancellation, `-bin` metadata, headers/trailers, TLS verification toggle, PKCS#12 certificates and proxy support.
+- Add a web build request path: `apiforge-agent` (local and relay modes) executes browser requests with the desktop engine, configured in Settings → Request agent.
+- Extract the HTTP engine into the shared `crates/apiforge-engine` crate used by the desktop app and the agent; request errors now include the underlying cause.
 
 - Consolidate upstream protocol/auth/environment and v1.0 update/persistence work on main while preserving module boundaries.
 - Fix GraphQL environment subscriptions causing an infinite render loop.

@@ -3,6 +3,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub(crate) enum AppError {
+    #[error(transparent)]
+    Engine(#[from] apiforge_engine::EngineError),
     #[error("invalid HTTP method: {0}")]
     InvalidMethod(String),
     #[error("invalid header name: {0}")]

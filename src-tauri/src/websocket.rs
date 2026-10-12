@@ -389,7 +389,7 @@ mod tests {
             method: "GET".into(),
             url: url.into(),
             headers: HashMap::from([("x-test".to_string(), "1".to_string())]),
-            body: crate::models::EngineBody::None,
+            body: apiforge_engine::models::EngineBody::None,
             network: network(proxy),
             digest_auth: None,
         }
