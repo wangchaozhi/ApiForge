@@ -2,9 +2,11 @@ import { useEffect } from 'react';
 import { useLocale, useLanguageStore } from '../i18n/index.ts';
 import { useAppStore } from '../store/appStore.ts';
 import { loadHistory } from '../services/history.ts';
+import { useAutoUpdate } from '../features/updates/useAutoUpdate.ts';
 
 export function useAppLifecycle() {
   const locale = useLocale();
+  useAutoUpdate();
 
   useEffect(() => {
     document.documentElement.lang = locale;

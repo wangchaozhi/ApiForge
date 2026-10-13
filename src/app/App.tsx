@@ -14,6 +14,7 @@ import { SettingsPanel } from '../features/settings/SettingsPanel.tsx';
 import { Sidebar } from './Sidebar.tsx';
 import { useAppLifecycle } from './useAppLifecycle.ts';
 import { useAppStore } from '../store/appStore.ts';
+import { UpdateBanner } from '../features/updates/UpdateBanner.tsx';
 
 export default function App() {
   useAppLifecycle();
@@ -33,6 +34,7 @@ export default function App() {
           </div>
           <div className="topbar-hint">{t('Variables support {syntax} syntax', { syntax: '{{name}}' })}</div>
         </header>
+        <UpdateBanner />
         {activeView === 'collections' && (
           <div className="request-workspace">
             <RequestTabs />

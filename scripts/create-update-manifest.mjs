@@ -11,7 +11,17 @@ export const UPDATER_PLATFORMS = [
   ['windows-x86_64', /x64-setup\.exe\.sig$/i],
 ];
 
-export async function createUpdateManifest(root, tag, baseUrl, now = new Date()) {
+/** Returns the bullet list under `## <version>` in a changelog, or null when absent. */
+export function changelogNotes(changelog, version) {
+  const lines = changelog.replace(/\r\n/g, '\n').split('\n');
+  const start = lines.findIndex((line) => line.trim() === `## ${version}`);
+  if (start < 0) return null;
+  const end = lines.findIndex((line, index) => index > start && /^##?\s/.test(line));
+  const notes = lines.slice(start + 1, end < 0 ? undefined : end).join('\n').trim();
+  return notes || null;
+}
+
+export async function createUpdateManifest(root, tag, baseUrl, now = new Date(), notes = `ApiForge ${tag}`) {
   const version = tag.replace(/^v/, '');
   const signatures = (await readdir(root)).filter((file) => file.endsWith('.sig'));
   const platforms = {};
@@ -24,7 +34,7 @@ export async function createUpdateManifest(root, tag, baseUrl, now = new Date())
       url: `${baseUrl}/${encodeURIComponent(archive)}`,
     };
   }
-  const manifest = { version, notes: `ApiForge ${tag}`, pub_date: now.toISOString(), platforms };
+  const manifest = { version, notes, pub_date: now.toISOString(), platforms };
   await writeFile(join(root, 'latest.json'), JSON.stringify(manifest, null, 2));
   return manifest;
 }
@@ -32,6 +42,8 @@ export async function createUpdateManifest(root, tag, baseUrl, now = new Date())
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [root, tag, baseUrl] = process.argv.slice(2);
   if (!root || !tag || !baseUrl) throw new Error('Expected artifact root, tag and release URL');
-  const manifest = await createUpdateManifest(root, tag, baseUrl);
+  const changelog = await readFile('CHANGELOG.md', 'utf8').catch(() => '');
+  const notes = changelogNotes(changelog, tag.replace(/^v/, '')) ?? `ApiForge ${tag}`;
+  const manifest = await createUpdateManifest(root, tag, baseUrl, new Date(), notes);
   console.log(`Created signed update manifest for ${manifest.version}: ${Object.keys(manifest.platforms).join(', ')}.`);
 }

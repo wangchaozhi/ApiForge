@@ -1,0 +1,17 @@
+.update-banner { flex-shrink: 0; border-bottom: 1px solid #2c4a6b; background: linear-gradient(90deg, #14233a, #151a23); color: #c9d3e0; }
+.update-banner-row { min-height: 46px; display: flex; align-items: center; gap: 11px; padding: 7px 14px; }
+.update-banner-row > svg { flex-shrink: 0; color: #7fb1ec; }
+.update-banner-text { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.update-banner-text strong { color: #e1e8f2; font-size: 10.5px; }
+.update-banner-text span { color: #8796aa; font-size: 9px; }
+.update-banner-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.update-banner-actions .icon-button { width: 26px; height: 26px; border-radius: 5px; background: transparent; color: #8796aa; }
+.update-banner-actions .icon-button:hover { background: #ffffff10; color: #d6dee9; }
+.update-progress { width: 180px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.update-progress-track { flex: 1; height: 5px; border-radius: 3px; background: #ffffff14; overflow: hidden; }
+.update-progress-bar { height: 100%; background: #6fa8eb; transition: width .2s ease; }
+.update-progress-bar[data-indeterminate="true"] { opacity: .55; animation: update-pulse 1.2s ease-in-out infinite; }
+.update-progress span { min-width: 30px; color: #a9b6c7; font: 9.5px "SFMono-Regular", Consolas, monospace; text-align: right; }
+.update-banner-error { padding: 0 14px 8px 40px; color: #e09a9f; font-size: 9.5px; }
+.update-banner-notes { max-height: 180px; overflow: auto; margin: 0 14px 10px 40px; padding: 9px 10px; border: 1px solid #263243; border-radius: 6px; background: #10141b; color: #aeb9c7; white-space: pre-wrap; font: 9.5px/1.5 "SFMono-Regular", Consolas, monospace; }
+@keyframes update-pulse { 50% { opacity: .25; } }

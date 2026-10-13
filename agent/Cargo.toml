@@ -1,6 +1,6 @@
 [package]
 name = "apiforge-agent"
-version = "1.0.0"
+version = "1.0.1"
 description = "Request agent that lets the ApiForge web app send requests without browser CORS limits"
 authors = ["ApiForge Contributors"]
 edition = "2024"

@@ -345,7 +345,6 @@ export const zhCN = {
   "Checking…": "检查中…",
   "Updates require the desktop runtime.": "更新功能需要桌面运行时。",
   "ApiForge is up to date.": "ApiForge 已是最新版本。",
-  "Downloading version {version}…": "正在下载版本 {version}…",
   "Cannot reach the request agent at {url}. Make sure apiforge-agent is running.": "无法连接请求代理 {url}，请确认 apiforge-agent 正在运行。",
   "The request agent rejected the token.": "请求代理拒绝了该令牌。",
   "Request agent error ({status}).": "请求代理错误（{status}）。",
@@ -385,7 +384,20 @@ export const zhCN = {
   "Connected for": "已连接时长",
   "Bytes received": "已接收字节",
   "Reconnects": "重连次数",
-  "SSE streaming requires the ApiForge desktop app.": "SSE 流需要 ApiForge 桌面应用。"
+  "SSE streaming requires the ApiForge desktop app.": "SSE 流需要 ApiForge 桌面应用。",
+  "Downloading ApiForge {version}…": "正在下载 ApiForge {version}…",
+  "ApiForge {version} is available": "ApiForge {version} 已发布",
+  "The app restarts automatically when the update is installed.": "更新安装完成后应用会自动重启。",
+  "You are on {current}. Updates are signed and verified before installing.": "当前版本 {current}。更新包经过签名，安装前会校验。",
+  "Download progress": "下载进度",
+  "Release notes": "更新说明",
+  "Update now": "立即更新",
+  "Later": "稍后",
+  "Update failed: {message}": "更新失败：{message}",
+  "Version {version} · signed release channel": "版本 {version} · 签名发布通道",
+  "Check for updates automatically": "自动检查更新",
+  "Checks after launch and every 6 hours. Updates install only when you confirm.": "启动后及每 6 小时检查一次，确认后才会安装。",
+  "Last checked {time}": "上次检查：{time}"
 } as const;
 
 export type MessageKey = keyof typeof zhCN;

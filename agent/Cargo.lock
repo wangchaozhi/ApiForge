@@ -54,7 +54,7 @@ dependencies = [
 
 [[package]]
 name = "apiforge-agent"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "apiforge-engine",
  "axum",
@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "apiforge-engine"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "base64",
  "md-5",

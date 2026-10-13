@@ -127,3 +127,13 @@ test('release config wires updater key and platform signing', async () => {
   assert.deepEqual(releaseConfig({ updaterPubkey: pubkey, os: 'macOS' }).bundle.macOS, { signingIdentity: '-' });
   assert.equal(releaseConfig({ updaterPubkey: pubkey, os: 'macOS', appleCertificate: 'cert' }).bundle.macOS, undefined);
 });
+
+test('update notes come from the matching changelog section', async () => {
+  const { changelogNotes } = await import('../scripts/create-update-manifest.mjs');
+  const changelog = '## 1.0.1\r\n\r\n- New thing\r\n- Fix\r\n\r\n## 1.0.0\n\n- Old\n';
+  assert.equal(changelogNotes(changelog, '1.0.1'), '- New thing\n- Fix');
+  assert.equal(changelogNotes(changelog, '1.0.0'), '- Old');
+  assert.equal(changelogNotes(changelog, '2.0.0'), null);
+  const real = await readFile('CHANGELOG.md', 'utf8');
+  assert.match(changelogNotes(real, '1.0.1'), /Automatic updates/);
+});

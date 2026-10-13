@@ -147,21 +147,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} --config ${{ github.workspace }}/src-tauri/tauri.release.conf.json -- --locked
-      - name: Verify Windows signatures
-        if: ${{ inputs.release && runner.os == 'Windows' && env.WINDOWS_CERTIFICATE_THUMBPRINT != '' }}
-        shell: pwsh
-        run: |
-          $release = "src-tauri/target/${{ matrix.target }}/release"
-          $files = @("$release/apiforge.exe") + (Get-ChildItem "$release/bundle/nsis/*.exe", "$release/bundle/msi/*.msi").FullName
-          foreach ($file in $files) {
-            $signature = Get-AuthenticodeSignature $file
-            if ($signature.SignerCertificate.Thumbprint -ne $env:WINDOWS_CERTIFICATE_THUMBPRINT -or -not $signature.TimeStamperCertificate) {
-              throw "$file is not signed and timestamped with the release certificate (status: $($signature.Status))"
-            }
-            Write-Output "Signed: $(Split-Path $file -Leaf)"
-          }
       # Portable build: the Tauri executable embeds the frontend, so unzipping it is enough
-      # (WebView2 ships with Windows 10/11). Collected from bundle/portable below.
+      # (WebView2 ships with Windows 10/11). The raw build output is not left signed by the
+      # bundler, so the portable copy is signed here. Collected from bundle/portable below.
       - name: Package portable Windows zip
         if: runner.os == 'Windows'
         shell: pwsh
@@ -171,8 +159,27 @@ jobs:
           $staging = Join-Path $env:RUNNER_TEMP 'ApiForge-portable'
           $output = "$release/bundle/portable"
           New-Item -ItemType Directory -Force $staging, $output | Out-Null
-          Copy-Item "$release/apiforge.exe" (Join-Path $staging 'ApiForge.exe')
+          $exe = Join-Path $staging 'ApiForge.exe'
+          Copy-Item "$release/apiforge.exe" $exe
+          if ($env:WINDOWS_CERTIFICATE_THUMBPRINT) {
+            $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName -Descending | Select-Object -First 1
+            & $signtool.FullName sign /sha1 $env:WINDOWS_CERTIFICATE_THUMBPRINT /fd sha256 /tr http://timestamp.digicert.com /td sha256 $exe
+            if ($LASTEXITCODE -ne 0) { throw "signtool failed with exit code $LASTEXITCODE" }
+          }
           Compress-Archive -Path "$staging/*" -DestinationPath "$output/ApiForge_${version}_x64-portable.zip" -Force
+      - name: Verify Windows signatures
+        if: ${{ inputs.release && runner.os == 'Windows' && env.WINDOWS_CERTIFICATE_THUMBPRINT != '' }}
+        shell: pwsh
+        run: |
+          $release = "src-tauri/target/${{ matrix.target }}/release"
+          $files = @(Join-Path $env:RUNNER_TEMP 'ApiForge-portable/ApiForge.exe') + (Get-ChildItem "$release/bundle/nsis/*.exe", "$release/bundle/msi/*.msi").FullName
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature $file
+            if ($signature.SignerCertificate.Thumbprint -ne $env:WINDOWS_CERTIFICATE_THUMBPRINT -or -not $signature.TimeStamperCertificate) {
+              throw "$file is not signed and timestamped with the release certificate (status: $($signature.Status))"
+            }
+            Write-Output "Signed: $(Split-Path $file -Leaf)"
+          }
       - name: Collect installers and checksums
         run: node scripts/collect-artifacts.mjs ${{ matrix.target }} ${{ matrix.name }} ${{ matrix.bundles }}
       - uses: actions/upload-artifact@v7

@@ -1,6 +1,6 @@
 [package]
 name = "apiforge"
-version = "1.0.0"
+version = "1.0.1"
 description = "A local-first API client built with Tauri"
 authors = ["ApiForge Contributors"]
 edition = "2024"

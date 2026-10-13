@@ -17,6 +17,7 @@
 @import './shared/styles/editor.css';
 @import './features/requests/multipart.css';
 @import './features/settings/styles.css';
+@import './features/updates/styles.css';
 @import './styles/responsive-editors.css';
 @import './features/requests/tabs.css';
 @import './features/collections/tree.css';

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { sendApiRequest, cancelApiRequest, currentRequestEngine } from '../src/services/http/transport.ts';
 import { fetchAgentInfo, probeAgent } from '../src/services/http/agent.ts';
 import { activeAgentConnection, normalizeAgentConnection, useAgentConnectionStore } from '../src/platform/agentConnection.ts';
+import { useLanguageStore } from '../src/i18n/index.ts';
 
 const request = (overrides = {}) => ({
   method: 'POST', url: 'http://localhost:3000/items', headers: { 'X-Test': '1' },
@@ -106,6 +107,10 @@ test('agent info and health probe', async (t) => {
 });
 
 test('browser fetch failures explain the likely CORS cause', async (t) => {
+  // The assertion checks the English message; do not depend on the machine's locale.
+  const preference = useLanguageStore.getState().preference;
+  useLanguageStore.getState().setPreference('en');
+  t.after(() => useLanguageStore.getState().setPreference(preference));
   browser(t, { enabled: false });
   t.mock.method(globalThis, 'fetch', async () => { throw new TypeError('Failed to fetch'); });
   await assert.rejects(sendApiRequest(request({ digestAuth: undefined }), 'cors'), (error) =>

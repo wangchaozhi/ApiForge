@@ -1,7 +1,12 @@
-## Unreleased
+## 1.0.1
 
-- Release: self-signed Authenticode signing for Windows installers and the portable exe (verified in CI), ad-hoc signing for macOS, and the public signing certificate attached to releases.
-- Release: add a portable Windows zip (`ApiForge_<version>_x64-portable.zip`) alongside the NSIS and MSI installers.
+- Automatic updates: checks the signed release channel shortly after launch and every 6 hours, shows an in-app banner with release notes, download progress and one-click install and restart. Can be turned off in Settings → Updates.
+- Windows installers and the portable executable are Authenticode-signed with a self-signed certificate (verified in CI); macOS builds are ad-hoc signed. The public certificate is attached to each release.
+- Add a portable Windows zip (`ApiForge_<version>_x64-portable.zip`) alongside the NSIS and MSI installers.
+- Release pipeline fixes: updater key passed to the bundler, macOS updater archives built and collected per architecture, Tauri v2 Windows updater artifacts, codesigning skipped when no Apple certificate is configured.
+
+## 1.0.0
+
 - SSE: EventSource-compliant reconnect (204/non-2xx/content-type are fatal), exponential backoff, live setting changes, Last-Event-ID reset per connection, connection statistics.
 - GraphQL: schema-driven autocomplete, full type browser, query formatting, syntax highlighting, operation-name validation, depth-limit tolerant introspection.
 - WebSocket: proxy (HTTP CONNECT + auth) support, connect timeout and cancellable connects, Base64 binary frames, ping, graceful close handshake, incoming/outgoing timeline.
