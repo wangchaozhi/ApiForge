@@ -68,6 +68,7 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         shell: bash
         run: |
+          cp certs/ApiForge-codesign.cer release-artifacts/
           node scripts/create-update-manifest.mjs release-artifacts "$RELEASE_TAG" "https://github.com/$GH_REPO/releases/download/$RELEASE_TAG"
           args=()
           if [[ "$RELEASE_TAG" == *-* ]]; then args+=(--prerelease); fi

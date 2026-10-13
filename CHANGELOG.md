@@ -1,5 +1,6 @@
 ## Unreleased
 
+- Release: self-signed Authenticode signing for Windows installers and the portable exe (verified in CI), ad-hoc signing for macOS, and the public signing certificate attached to releases.
 - Release: add a portable Windows zip (`ApiForge_<version>_x64-portable.zip`) alongside the NSIS and MSI installers.
 - SSE: EventSource-compliant reconnect (204/non-2xx/content-type are fatal), exponential backoff, live setting changes, Last-Event-ID reset per connection, connection statistics.
 - GraphQL: schema-driven autocomplete, full type browser, query formatting, syntax highlighting, operation-name validation, depth-limit tolerant introspection.

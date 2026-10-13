@@ -111,3 +111,19 @@ test('missing installers and signatures fail loudly', async () => {
     await rm(work, { recursive: true, force: true });
   }
 });
+
+test('release config wires updater key and platform signing', async () => {
+  const { releaseConfig } = await import('../scripts/write-release-config.mjs');
+  const pubkey = 'dW50cnVzdGVk';
+  assert.throws(() => releaseConfig({ os: 'Linux' }), /TAURI_UPDATER_PUBKEY/);
+  assert.deepEqual(releaseConfig({ updaterPubkey: pubkey, os: 'Linux' }), {
+    bundle: { createUpdaterArtifacts: true },
+    plugins: { updater: { pubkey } },
+  });
+  assert.deepEqual(releaseConfig({ updaterPubkey: pubkey, os: 'Windows', windowsThumbprint: 'ABC123' }).bundle.windows, {
+    certificateThumbprint: 'ABC123', digestAlgorithm: 'sha256', timestampUrl: 'http://timestamp.digicert.com',
+  });
+  assert.equal(releaseConfig({ updaterPubkey: pubkey, os: 'Windows' }).bundle.windows, undefined);
+  assert.deepEqual(releaseConfig({ updaterPubkey: pubkey, os: 'macOS' }).bundle.macOS, { signingIdentity: '-' });
+  assert.equal(releaseConfig({ updaterPubkey: pubkey, os: 'macOS', appleCertificate: 'cert' }).bundle.macOS, undefined);
+});

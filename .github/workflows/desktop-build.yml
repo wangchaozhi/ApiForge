@@ -86,16 +86,6 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN: '1'
         with:
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} -- --locked
-      # The bundler reads the updater public key from the Tauri config (the app gets it at
-      # compile time via APIFORGE_UPDATER_PUBKEY), so release builds merge it in here.
-      - name: Write release Tauri config
-        if: ${{ inputs.release }}
-        shell: bash
-        env:
-          UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
-        run: |
-          test -n "$UPDATER_PUBKEY" || { echo "Missing TAURI_UPDATER_PUBKEY repository variable"; exit 1; }
-          node -e "require('fs').writeFileSync('src-tauri/tauri.release.conf.json', JSON.stringify({ bundle: { createUpdaterArtifacts: true }, plugins: { updater: { pubkey: process.env.UPDATER_PUBKEY } } }, null, 2))"
       # Tauri attempts codesigning whenever APPLE_CERTIFICATE is set, even to an empty
       # string, so the Apple variables are exported only when a certificate is configured.
       - name: Configure macOS code signing
@@ -110,7 +100,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           if [ -z "$APPLE_CERTIFICATE" ]; then
-            echo "::warning::macOS code signing secrets are not configured; building unsigned DMGs."
+            echo "::warning::No Apple Developer ID certificate configured; macOS builds are ad-hoc signed."
             exit 0
           fi
           for name in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
@@ -118,6 +108,34 @@ jobs:
             [ -n "$value" ] || continue
             { echo "$name<<__APIFORGE_EOF__"; printf '%s\n' "$value"; echo "__APIFORGE_EOF__"; } >> "$GITHUB_ENV"
           done
+      # Self-signed (or CA-issued) Authenticode certificate: imported into the runner's
+      # temporary store; Tauri signs the app, NSIS and MSI by thumbprint.
+      - name: Configure Windows code signing
+        if: ${{ inputs.release && runner.os == 'Windows' }}
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if (-not $env:WINDOWS_CERTIFICATE) {
+            Write-Output '::warning::Windows code signing secrets are not configured; building unsigned installers.'
+            exit 0
+          }
+          $pfx = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $certificate = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password
+          Remove-Item $pfx
+          "WINDOWS_CERTIFICATE_THUMBPRINT=$($certificate.Thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Output "Imported code signing certificate $($certificate.Subject) ($($certificate.Thumbprint))"
+      # The bundler reads the updater key and signing settings from the Tauri config (the app
+      # gets the updater key at compile time via APIFORGE_UPDATER_PUBKEY).
+      - name: Write release Tauri config
+        if: ${{ inputs.release }}
+        shell: bash
+        env:
+          UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+        run: node scripts/write-release-config.mjs src-tauri/tauri.release.conf.json
       - name: Build signed updater artifacts
         if: ${{ inputs.release }}
         uses: tauri-apps/tauri-action@v1
@@ -129,6 +147,19 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }} --config ${{ github.workspace }}/src-tauri/tauri.release.conf.json -- --locked
+      - name: Verify Windows signatures
+        if: ${{ inputs.release && runner.os == 'Windows' && env.WINDOWS_CERTIFICATE_THUMBPRINT != '' }}
+        shell: pwsh
+        run: |
+          $release = "src-tauri/target/${{ matrix.target }}/release"
+          $files = @("$release/apiforge.exe") + (Get-ChildItem "$release/bundle/nsis/*.exe", "$release/bundle/msi/*.msi").FullName
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature $file
+            if ($signature.SignerCertificate.Thumbprint -ne $env:WINDOWS_CERTIFICATE_THUMBPRINT -or -not $signature.TimeStamperCertificate) {
+              throw "$file is not signed and timestamped with the release certificate (status: $($signature.Status))"
+            }
+            Write-Output "Signed: $(Split-Path $file -Leaf)"
+          }
       # Portable build: the Tauri executable embeds the frontend, so unzipping it is enough
       # (WebView2 ships with Windows 10/11). Collected from bundle/portable below.
       - name: Package portable Windows zip
